@@ -1,7 +1,9 @@
 import sys
 import rrdtool
 
-result = rrdtool.fetch('test.rrd',
+filename = 'test.rrd'
+
+result = rrdtool.fetch(filename,
                        'AVERAGE',
                        '--start', '920804400',
                        '--end', '920809200')
