@@ -30,8 +30,15 @@ const callServer = (command) => {
 };
 
 const main = async () => {
-  let command = 'GET hosts\n';
-  command = command + 'Columns: name\n';
+  let command = 'GET log\n';
+  command =
+    command +
+    'Columns: host_name time service_description type state state_type message plugin_output\n';
+  command = command + 'Filter: host_name = RO-Busol\n';
+  // command = command + 'Filter: state_type = UP\n'
+  // command = command + 'Filter: state_type = DOWN\n'
+  // command = command + 'Filter: type = HOST NOTIFICATION\n'
+  // command = command + 'Filter: type = SERVICE NOTIFICATION\n'
   command = command + 'OutputFormat: json\n';
 
   try {
