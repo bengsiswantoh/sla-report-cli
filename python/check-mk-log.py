@@ -6,10 +6,15 @@ import os
 import socket
 import time
 
+from dotenv import load_dotenv
+load_dotenv()
+host = os.getenv("HOST")
+port = int(os.getenv("PORT"))
+
 # for local site only: file path to socket
 # address = "%s/tmp/run/live" % os.getenv("OMD_ROOT")
 # for local/remote sites: TCP address/port for Livestatus socket
-address = ("localhost", 6557)
+address = (host, port)
 
 # connect to Livestatus
 family = socket.AF_INET if type(address) == tuple else socket.AF_UNIX
@@ -18,14 +23,16 @@ sock.connect(address)
 
 # send our request and let Livestatus know we're done
 # sock.sendall("GET status\nOutputFormat: json\n")
-query = "GET log\n"
-query = query + "Columns: host_name time type message state state_type plugin_output\n"
-query = query + "Filter: host_name = RO-Busol\n"
-#query = query + "Filter: state_type = UP\n"
-#query = query + "Filter: state_type = DOWN\n"
-query = query + "Filter: type = HOST NOTIFICATION\n"
-query = query + "OutputFormat: json\n"
-sock.sendall(query)
+command = "GET log\n"
+command = command + \
+    "Columns: host_name time service_description type state state_type message plugin_output\n"
+command = command + "Filter: host_name = RO-Busol\n"
+#command = command + "Filter: state_type = UP\n"
+#command = command + "Filter: state_type = DOWN\n"
+#command = command + "Filter: type = HOST NOTIFICATION\n"
+#command = command + "Filter: type = SERVICE NOTIFICATION\n"
+command = command + "OutputFormat: json\n"
+sock.sendall(command)
 sock.shutdown(socket.SHUT_WR)
 
 # receive the reply as a JSON string

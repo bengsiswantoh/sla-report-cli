@@ -5,10 +5,15 @@ import json
 import os
 import socket
 
+from dotenv import load_dotenv
+load_dotenv()
+host = os.getenv("HOST")
+port = int(os.getenv("PORT"))
+
 # for local site only: file path to socket
 # address = "%s/tmp/run/live" % os.getenv("OMD_ROOT")
 # for local/remote sites: TCP address/port for Livestatus socket
-address = ("localhost", 6557)
+address = (host, port)
 
 # connect to Livestatus
 family = socket.AF_INET if type(address) == tuple else socket.AF_UNIX
@@ -16,11 +21,11 @@ sock = socket.socket(family, socket.SOCK_STREAM)
 sock.connect(address)
 
 # send our request and let Livestatus know we're done
-# sock.sendall("GET status\nOutputFormat: json\n")
-query = "GET hosts\n"
-query = query + "Columns: name\n"
-query = query + "OutputFormat: json\n"
-sock.sendall(query)
+command = "GET columns\n"
+command = command + "Filter: table = log\n"
+command = command + "Columns: name\n"
+command = command + "OutputFormat: json\n"
+sock.sendall(command)
 sock.shutdown(socket.SHUT_WR)
 
 # receive the reply as a JSON string
