@@ -1,0 +1,17 @@
+{
+  "name": "sla-report",
+  "version": "1.0.0",
+  "description": "Scripts related to sla report",
+  "main": "check-mk-hosts.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "prettier": {
+    "singleQuote": true
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0"
+  }
+}
