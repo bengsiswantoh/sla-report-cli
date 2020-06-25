@@ -30,15 +30,21 @@ const callServer = (command) => {
   });
 };
 
-const main = async () => {
+const getLogCommand = (hostName, service) => {
   let command = 'GET log\n';
   command =
     command +
     'Columns: time host_name service_description type state state_type message plugin_output\n';
-  command = command + 'Filter: host_name = RO-Busol\n';
+  command = command + `Filter: host_name = RO-Busol\n`;
   command = command + 'Filter: service_description = Check_MK\n';
   command = command + 'Filter: type = SERVICE NOTIFICATION\n';
   command = command + 'OutputFormat: json\n';
+
+  return command;
+};
+
+const main = async () => {
+  const command = getLogCommand();
 
   try {
     let result = await callServer(command);

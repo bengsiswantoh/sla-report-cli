@@ -1,6 +1,5 @@
 require('dotenv').config();
 const net = require('net');
-const moment = require('moment');
 
 const client = new net.Socket();
 const host = process.env.HOST;
@@ -31,23 +30,12 @@ const callServer = (command) => {
 };
 
 const main = async () => {
-  let command = 'GET log\n';
-  command =
-    command +
-    'Columns: time host_name service_description type state state_type message plugin_output\n';
-  command = command + 'Filter: host_name = RO-Busol\n';
-  command = command + 'Filter: service_description = Check_MK\n';
-  command = command + 'Filter: type = SERVICE NOTIFICATION\n';
+  let command = 'GET services\n';
+  command = command + 'Columns: host_name description\n';
   command = command + 'OutputFormat: json\n';
 
   try {
-    let result = await callServer(command);
-
-    result = result.map((item) => {
-      item[0] = moment.unix(item[0]).format('YYYY-MM-DD HH:mm:ss');
-      return item;
-    });
-
+    const result = await callServer(command);
     console.log(result);
   } catch (error) {
     console.log(error);
