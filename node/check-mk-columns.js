@@ -30,10 +30,9 @@ const callServer = (command) => {
 };
 
 const main = async () => {
-  let command = 'GET hosts\n';
+  let command = 'GET columns\n';
   command = command + 'Columns: name\n';
-  command = command + 'Limit: 3\n';
-  command = command + 'ColumnHeaders: on\n';
+  command = command + 'Filter: table = log\n';
   command = command + 'OutputFormat: json\n';
 
   try {

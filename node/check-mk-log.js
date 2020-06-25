@@ -38,6 +38,8 @@ const main = async () => {
   command = command + 'Filter: host_name = RO-Busol\n';
   command = command + 'Filter: service_description = Check_MK\n';
   command = command + 'Filter: type = SERVICE NOTIFICATION\n';
+  command = command + 'Limit: 3\n';
+  command = command + 'ColumnHeaders: on\n';
   command = command + 'OutputFormat: json\n';
 
   try {

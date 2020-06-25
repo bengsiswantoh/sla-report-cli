@@ -5,6 +5,7 @@ const moment = require('moment');
 const client = new net.Socket();
 const host = process.env.HOST;
 const port = process.env.PORT;
+const displayFormat = 'YYYY-MM-DD HH:mm:ss';
 
 const callServer = (command) => {
   return new Promise((resolve, reject) => {
@@ -35,29 +36,101 @@ const getLogCommand = (hostName, service) => {
   command =
     command +
     'Columns: time host_name service_description type state state_type message plugin_output\n';
-  command = command + `Filter: host_name = RO-Busol\n`;
-  command = command + 'Filter: service_description = Check_MK\n';
-  command = command + 'Filter: type = SERVICE NOTIFICATION\n';
+  command = command + `Filter: host_name = ${hostName}\n`;
+  if (service) {
+    command = command + `Filter: service_description = ${service}\n`;
+  }
+  // command = command + 'Filter: type = SERVICE NOTIFICATION\n';
   command = command + 'OutputFormat: json\n';
 
   return command;
 };
 
-const main = async () => {
-  const command = getLogCommand();
+const getHostLogCommand = (hostName) => {
+  let command = 'GET log\n';
+  command = command + 'Columns: time state_type plugin_output\n';
+  command = command + `Filter: host_name = ${hostName}\n`;
+  command = command + 'Filter: type = HOST NOTIFICATION\n';
+  command = command + 'OutputFormat: json\n';
+
+  return command;
+};
+
+const filterLogs = (logs, rangeFrom, rangeUntil) => {
+  filteredLogs = logs.filter((item) => {
+    const from = item[0];
+    const keepCondition = from > rangeFrom.unix() && from < rangeUntil.unix();
+    return keepCondition;
+  });
+
+  return filteredLogs;
+};
+
+const formatHostTimeline = (logs, rangeFrom, rangeUntil) => {
+  const stateTypes = ['UP', 'DOWN', 'UNREACH', 'Flapping', 'Downtime', 'N/A'];
+
+  let until = rangeUntil;
+  const rangeDuration = rangeFrom.diff(rangeUntil);
+
+  const data = {};
+
+  for (const state of stateTypes) {
+    data[state] = 0;
+  }
+
+  timeline = logs.map((item) => {
+    const from = moment.unix(item[0]);
+    let state = item[1];
+
+    // switch (state) {
+    //   case 'FLAPPINGSTART (DOWN)':
+    //     state = 'Flapping';
+    //     break;
+    //   case 'FLAPPINGSTOP (UP)':
+    //     state = 'UP';
+    //     break;
+    // }
+
+    const pluginOutput = item[2];
+
+    let duration = (from.diff(until) / rangeDuration) * 100;
+    duration = duration.toFixed(2);
+
+    data[state] += parseFloat(duration);
+
+    const result = {
+      from: from.format(displayFormat),
+      until: until.format(displayFormat),
+      duration: `${duration}%`,
+      state,
+      pluginOutput,
+    };
+    until = from;
+    return result;
+  });
+
+  data['timeline'] = timeline;
+
+  return data;
+};
+
+const availabilityHost = async (hostName) => {
+  const until = moment();
+  const from = moment().subtract(31, 'days');
+
+  const command = getHostLogCommand(hostName);
 
   try {
-    let result = await callServer(command);
+    let logs = await callServer(command);
 
-    result = result.map((item) => {
-      item[0] = moment.unix(item[0]).format('YYYY-MM-DD HH:mm:ss');
-      return item;
-    });
+    const filteredLogs = filterLogs(logs, from, until);
 
-    console.log(result);
+    const data = formatHostTimeline(filteredLogs, from, until);
+
+    console.log('data', data);
   } catch (error) {
     console.log(error);
   }
 };
 
-main();
+availabilityHost('RO-Busol');

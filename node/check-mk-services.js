@@ -31,7 +31,13 @@ const callServer = (command) => {
 
 const main = async () => {
   let command = 'GET services\n';
-  command = command + 'Columns: host_name description\n';
+  command = command + 'Columns: host_name description \n';
+  // command = command + 'Stats: state = 0\n';
+  // command = command + 'Stats: state = 1\n';
+  // command = command + 'Stats: state = 2\n';
+  // command = command + 'Stats: state = 3\n';
+  command = command + 'Limit: 3\n';
+  command = command + 'ColumnHeaders: on\n';
   command = command + 'OutputFormat: json\n';
 
   try {
