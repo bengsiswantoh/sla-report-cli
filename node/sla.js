@@ -57,11 +57,24 @@ const getHostLogCommand = (hostName) => {
 };
 
 const filterLogs = (logs, rangeFrom, rangeUntil) => {
-  filteredLogs = logs.filter((item) => {
+  let lastIndex;
+
+  filteredLogs = logs.filter((item, index) => {
     const from = item[0];
-    const keepCondition = from > rangeFrom.unix() && from < rangeUntil.unix();
+    const firstCondition = from > rangeFrom.unix();
+    const keepCondition = firstCondition && from < rangeUntil.unix();
+    if (!firstCondition && !lastIndex) {
+      lastIndex = index;
+    }
+
     return keepCondition;
   });
+
+  if (lastIndex) {
+    const log = logs[lastIndex];
+    log[0] = rangeFrom.unix();
+    filteredLogs = [...filteredLogs, log];
+  }
 
   return filteredLogs;
 };
@@ -76,27 +89,26 @@ const formatHostTimeline = (logs, rangeFrom, rangeUntil) => {
 
   for (const state of stateTypes) {
     data[state] = 0;
+    data[`timeline-${state}`] = [];
   }
 
   timeline = logs.map((item) => {
     const from = moment.unix(item[0]);
     let state = item[1];
-
-    // switch (state) {
-    //   case 'FLAPPINGSTART (DOWN)':
-    //     state = 'Flapping';
-    //     break;
-    //   case 'FLAPPINGSTOP (UP)':
-    //     state = 'UP';
-    //     break;
-    // }
-
+    switch (state) {
+      case 'FLAPPINGSTART (DOWN)':
+        state = 'Flapping';
+        break;
+      case 'FLAPPINGSTART (UP)':
+        state = 'Flapping';
+        break;
+      case 'FLAPPINGSTOP (UP)':
+        state = 'UP';
+        break;
+    }
     const pluginOutput = item[2];
-
     let duration = (from.diff(until) / rangeDuration) * 100;
     duration = duration.toFixed(2);
-
-    data[state] += parseFloat(duration);
 
     const result = {
       from: from.format(displayFormat),
@@ -105,7 +117,14 @@ const formatHostTimeline = (logs, rangeFrom, rangeUntil) => {
       state,
       pluginOutput,
     };
+
+    // update until
     until = from;
+
+    // update data
+    data[state] += parseFloat(duration);
+    data[`timeline-${state}`].push(result);
+
     return result;
   });
 
