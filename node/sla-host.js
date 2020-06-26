@@ -1,50 +1,7 @@
-require('dotenv').config();
-const net = require('net');
 const moment = require('moment');
+const callServer = require('./helpers/callServer');
 
-const client = new net.Socket();
-const host = process.env.HOST;
-const port = process.env.PORT;
 const displayFormat = 'YYYY-MM-DD HH:mm:ss';
-
-const callServer = (command) => {
-  return new Promise((resolve, reject) => {
-    let result = [];
-
-    client.connect(port, host, () => {
-      client.write(command);
-      client.end();
-    });
-
-    client.on('data', (data) => {
-      const dataString = data.toString();
-      result.push(dataString);
-    });
-
-    client.on('close', function () {
-      const resultString = result.join('');
-      const resultParsed = JSON.parse(resultString);
-      resolve(resultParsed);
-    });
-
-    client.on('error', reject);
-  });
-};
-
-const getLogCommand = (hostName, service) => {
-  let command = 'GET log\n';
-  command =
-    command +
-    'Columns: time host_name service_description type state state_type message plugin_output\n';
-  command = command + `Filter: host_name = ${hostName}\n`;
-  if (service) {
-    command = command + `Filter: service_description = ${service}\n`;
-  }
-  // command = command + 'Filter: type = SERVICE NOTIFICATION\n';
-  command = command + 'OutputFormat: json\n';
-
-  return command;
-};
 
 const getHostLogCommand = (hostName) => {
   let command = 'GET log\n';
