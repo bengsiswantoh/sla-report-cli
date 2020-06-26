@@ -1,7 +1,8 @@
+require('dotenv').config();
 const moment = require('moment');
 const callServer = require('./helpers/callServer');
-
-const displayFormat = 'YYYY-MM-DD HH:mm:ss';
+const filterLogs = require('./helpers/filterLogs');
+const generateAvailability = require('./helpers/generateAvailability');
 
 const getHostLogCommand = (hostName) => {
   let command = 'GET log\n';
@@ -13,86 +14,11 @@ const getHostLogCommand = (hostName) => {
   return command;
 };
 
-const filterLogs = (logs, rangeFrom, rangeUntil) => {
-  let lastIndex;
-
-  filteredLogs = logs.filter((item, index) => {
-    const from = item[0];
-    const firstCondition = from > rangeFrom.unix();
-    const keepCondition = firstCondition && from < rangeUntil.unix();
-    if (!firstCondition && !lastIndex) {
-      lastIndex = index;
-    }
-
-    return keepCondition;
-  });
-
-  if (lastIndex) {
-    const log = logs[lastIndex];
-    log[0] = rangeFrom.unix();
-    filteredLogs = [...filteredLogs, log];
-  }
-
-  return filteredLogs;
-};
-
-const formatHostTimeline = (logs, rangeFrom, rangeUntil) => {
-  const stateTypes = ['UP', 'DOWN', 'UNREACH', 'Flapping', 'Downtime', 'N/A'];
-
-  let until = rangeUntil;
-  const rangeDuration = rangeFrom.diff(rangeUntil);
-
-  const data = {};
-
-  for (const state of stateTypes) {
-    data[state] = 0;
-    data[`timeline-${state}`] = [];
-  }
-
-  timeline = logs.map((item) => {
-    const from = moment.unix(item[0]);
-    let state = item[1];
-    switch (state) {
-      case 'FLAPPINGSTART (DOWN)':
-        state = 'Flapping';
-        break;
-      case 'FLAPPINGSTART (UP)':
-        state = 'Flapping';
-        break;
-      case 'FLAPPINGSTOP (UP)':
-        state = 'UP';
-        break;
-    }
-    const pluginOutput = item[2];
-    let duration = (from.diff(until) / rangeDuration) * 100;
-    duration = duration.toFixed(2);
-
-    const result = {
-      from: from.format(displayFormat),
-      until: until.format(displayFormat),
-      duration: `${duration}%`,
-      state,
-      pluginOutput,
-    };
-
-    // update until
-    until = from;
-
-    // update data
-    data[state] += parseFloat(duration);
-    data[`timeline-${state}`].push(result);
-
-    return result;
-  });
-
-  data['timeline'] = timeline;
-
-  return data;
-};
-
 const availabilityHost = async (hostName) => {
   const until = moment();
   const from = moment().subtract(31, 'days');
+
+  const stateTypes = ['UP', 'DOWN', 'UNREACH', 'Flapping', 'Downtime', 'N/A'];
 
   const command = getHostLogCommand(hostName);
 
@@ -101,7 +27,7 @@ const availabilityHost = async (hostName) => {
 
     const filteredLogs = filterLogs(logs, from, until);
 
-    const data = formatHostTimeline(filteredLogs, from, until);
+    const data = generateAvailability(filteredLogs, stateTypes, from, until);
 
     console.log('data', data);
   } catch (error) {
