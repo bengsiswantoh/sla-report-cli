@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const displayFormat = process.env.DISPLAY_FORMAT;
 
-const generateAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
+const generateHostAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
   let until = rangeUntil;
   const rangeDuration = rangeFrom.diff(rangeUntil);
 
@@ -13,35 +13,38 @@ const generateAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
   for (const state of stateTypes) {
     availabilty[state] = 0;
     timelines[state] = [];
-    console.log(state);
   }
 
   timeline = logs.map((item) => {
     const from = moment.unix(item[0]);
     let state = item[1];
-    switch (state) {
-      case 'FLAPPINGSTART (DOWN)':
-        state = 'Flapping';
-        break;
-      case 'FLAPPINGSTART (UP)':
-        state = 'Flapping';
-        break;
-      case 'FLAPPINGSTOP (UP)':
-        state = 'UP';
-        break;
+
+    let regexResult;
+    const regexFlappingStart = /FLAPPINGSTART \((\w+)\)/;
+    regexResult = state.match(regexFlappingStart);
+    if (regexResult) {
+      state = 'Flapping';
     }
+    const regexFlappingStop = /FLAPPINGSTOP \((\w+)\)/;
+    regexResult = state.match(regexFlappingStop);
+    if (regexResult) {
+      state = regexResult[1];
+    }
+
     const pluginOutput = item[2];
     let duration = (from.diff(until) / rangeDuration) * 100;
-    duration = duration.toFixed(2);
+    duration = duration;
 
     const result = {
+      fromMoment: from,
       from: from.format(displayFormat),
+      untilMoment: until,
       until: until.format(displayFormat),
-      duration: `${duration}%`,
+      durationFloat: duration,
+      duration: `${duration.toFixed(2)}%`,
       state,
       pluginOutput,
     };
-    console.log('state', state);
 
     // update until
     until = from;
@@ -58,4 +61,4 @@ const generateAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
   return { availabilty, timelines };
 };
 
-module.exports = generateAvailability;
+module.exports = generateHostAvailability;

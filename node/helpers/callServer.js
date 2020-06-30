@@ -1,14 +1,13 @@
 require('dotenv').config();
 const net = require('net');
 
-const client = new net.Socket();
-
 const host = process.env.HOST;
 const port = process.env.PORT;
 
-const callServer = (command) => {
+const callServer = (command, caller) => {
   return new Promise((resolve, reject) => {
     let result = [];
+    const client = new net.Socket();
     client.connect(port, host, () => {
       client.write(command);
       client.end();
