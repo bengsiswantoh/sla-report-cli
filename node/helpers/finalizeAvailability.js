@@ -1,6 +1,9 @@
-const finalizaAvailability = (availability) => {
-  for (const item of availability) {
+const finalizeAvailability = (availability) => {
+  for (const key in availability) {
+    availability[key] = Math.round(availability[key]);
   }
+
+  return availability;
 };
 
-module.exports = finalizaAvailability;
+module.exports = finalizeAvailability;

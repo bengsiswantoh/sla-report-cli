@@ -1,5 +1,6 @@
-require('dotenv').config();
 const moment = require('moment');
+const checkState = require('./checkState');
+require('dotenv').config();
 
 const displayFormat = process.env.DISPLAY_FORMAT;
 
@@ -76,20 +77,7 @@ const generateServiceAvailability = (
 
   logs.map((item) => {
     const from = moment.unix(item[0]);
-    let state = item[1];
-
-    let regexResult;
-    const regexFlappingStart = /FLAPPINGSTART \((\w+)\)/;
-    regexResult = state.match(regexFlappingStart);
-    if (regexResult) {
-      state = 'Flapping';
-    }
-    const regexFlappingStop = /FLAPPINGSTOP \((\w+)\)/;
-    regexResult = state.match(regexFlappingStop);
-    if (regexResult) {
-      state = regexResult[1];
-    }
-
+    let state = checkState(item[1]);
     const pluginOutput = item[2];
     let duration = (from.diff(until) / rangeDuration) * 100;
 

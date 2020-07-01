@@ -1,13 +1,22 @@
-require('dotenv').config();
 const moment = require('moment');
+const checkState = require('./checkState');
+const generateLastTimeline = require('./generateLastTimeline');
+const finalizeAvailability = require('./finalizeAvailability');
+require('dotenv').config();
 
 const displayFormat = process.env.DISPLAY_FORMAT;
 
-const generateHostAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
+const generateHostAvailability = (
+  logs,
+  stateLogs,
+  stateTypes,
+  rangeFrom,
+  rangeUntil
+) => {
   let until = rangeUntil;
   const rangeDuration = rangeFrom.diff(rangeUntil);
 
-  const availabilty = {};
+  let availabilty = {};
   const timelines = {};
 
   for (const state of stateTypes) {
@@ -17,23 +26,9 @@ const generateHostAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
 
   timeline = logs.map((item) => {
     const from = moment.unix(item[0]);
-    let state = item[1];
-
-    let regexResult;
-    const regexFlappingStart = /FLAPPINGSTART \((\w+)\)/;
-    regexResult = state.match(regexFlappingStart);
-    if (regexResult) {
-      state = 'Flapping';
-    }
-    const regexFlappingStop = /FLAPPINGSTOP \((\w+)\)/;
-    regexResult = state.match(regexFlappingStop);
-    if (regexResult) {
-      state = regexResult[1];
-    }
-
+    const state = checkState(item[1]);
     const pluginOutput = item[2];
-    let duration = (from.diff(until) / rangeDuration) * 100;
-    duration = duration;
+    const duration = (from.diff(until) / rangeDuration) * 100;
 
     const result = {
       fromMoment: from,
@@ -56,7 +51,23 @@ const generateHostAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
     return result;
   });
 
+  // add timeline from rangeFrom
+  const lastTimeline = timeline[timeline.length - 1];
+  if (lastTimeline.from > rangeFrom.format(displayFormat)) {
+    generateLastTimeline(
+      stateLogs,
+      lastTimeline,
+      rangeFrom,
+      rangeDuration,
+      availabilty,
+      timelines,
+      timeline
+    );
+  }
+
   timelines['summary'] = timeline;
+
+  availabilty = finalizeAvailability(availabilty);
 
   return { availabilty, timelines };
 };

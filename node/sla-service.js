@@ -1,4 +1,3 @@
-require('dotenv').config();
 const moment = require('moment');
 const callServer = require('./helpers/callServer');
 const filterLogs = require('./helpers/filterLogs');

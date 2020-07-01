@@ -1,8 +1,8 @@
-require('dotenv').config();
 const moment = require('moment');
 const callServer = require('./helpers/callServer');
 const filterLogs = require('./helpers/filterLogs');
 const getHostNotificationsCommand = require('./helpers/getHostNotificationsCommand');
+const getHostStatesCommand = require('./helpers/getHostStatesCommand');
 const generateHostAvailability = require('./helpers/generateHostAvailability');
 
 const hostAvailability = async (hostName) => {
@@ -14,11 +14,15 @@ const hostAvailability = async (hostName) => {
   try {
     let command = getHostNotificationsCommand(hostName);
     let notificationLogs = await callServer(command);
+    notificationLogs = filterLogs(notificationLogs, from, until);
 
-    const filteredNotificationLogs = filterLogs(notificationLogs, from, until);
+    command = getHostStatesCommand(hostName);
+    let stateLogs = await callServer(command);
+    stateLogs = filterLogs(stateLogs, from, until);
 
     const data = generateHostAvailability(
-      filteredNotificationLogs,
+      notificationLogs,
+      stateLogs,
       stateTypes,
       from,
       until
@@ -31,4 +35,4 @@ const hostAvailability = async (hostName) => {
   }
 };
 
-hostAvailability('RO-Busol');
+hostAvailability('kecapi');
