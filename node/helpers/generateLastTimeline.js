@@ -21,21 +21,28 @@ const generateLastTimeline = (
     );
   });
 
-  const stateLog = stateLogs[0];
   const from = rangeFrom;
   const until = lastTimeline.fromMoment;
-  // TODO: change this hardcoded state
-  let state;
-  switch (type) {
-    case 'host':
-      state = 'UP';
-      break;
-    case 'service':
-      state = 'OK';
-      break;
-  }
-  const pluginOutput = stateLog[2];
   const duration = (from.diff(until) / rangeDuration) * 100;
+  let state;
+  let pluginOutput;
+
+  if (stateLogs.length > 0) {
+    const stateLog = stateLogs[0];
+    // TODO: change this hardcoded state
+    switch (type) {
+      case 'host':
+        state = 'UP';
+        break;
+      case 'service':
+        state = 'OK';
+        break;
+    }
+    pluginOutput = stateLog[2];
+  } else {
+    state = 'N/A';
+    pluginOutput = '';
+  }
 
   const result = {
     fromMoment: from,

@@ -7,7 +7,8 @@ const generateHostAvailability = require('./helpers/generateHostAvailability');
 
 const hostAvailability = async (hostName) => {
   const until = moment();
-  const from = moment().subtract(31, 'days');
+  // const from = moment().subtract(31, 'days');
+  const from = moment('2020-01-01 00:00:00');
 
   const stateTypes = ['UP', 'DOWN', 'UNREACH', 'Flapping', 'Downtime', 'N/A'];
 
@@ -18,6 +19,7 @@ const hostAvailability = async (hostName) => {
 
     command = getHostStatesCommand(hostName);
     let stateLogs = await callServer(command);
+    // console.log(stateLogs);
     stateLogs = filterLogs(stateLogs, from, until);
 
     const data = generateHostAvailability(
