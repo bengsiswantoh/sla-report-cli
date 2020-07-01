@@ -1,58 +1,75 @@
 const moment = require('moment');
 const callServer = require('./helpers/callServer');
 const filterLogs = require('./helpers/filterLogs');
-const getHostNotificationCommand = require('./helpers/getHostNotificationsCommand');
-const getServiceNotificationsCommand = require('./helpers/getServiceNotificationsCommand');
+const getHostNotificationsCommand = require('./helpers/getHostNotificationsCommand');
+const getHostStatesCommand = require('./helpers/getHostStatesCommand');
 const generateHostAvailability = require('./helpers/generateHostAvailability');
+const getServiceNotificationsCommand = require('./helpers/getServiceNotificationsCommand');
+const getServiceStatesCommand = require('./helpers/getServiceStatesCommand');
 const generateServiceAvailability = require('./helpers/generateServiceAvailability');
 
 const serviceAvailability = async (hostName, serviceName) => {
   const until = moment();
   const from = moment().subtract(31, 'days');
 
-  const hostStateTypes = [
-    'UP',
-    'DOWN',
-    'UNREACH',
-    'Flapping',
-    'Downtime',
-    'N/A',
-  ];
-
-  const serviceStateTypes = [
-    'OK',
-    'WARNING',
-    'CRITICAL',
-    'UNKNOWN',
-    'Flapping',
-    'H.Down',
-    'Downtime',
-    'N/A',
-  ];
-
   try {
-    let command = getHostNotificationCommand(hostName);
+    // host data
+    const hostStateTypes = [
+      'UP',
+      'DOWN',
+      'UNREACH',
+      'Flapping',
+      'Downtime',
+      'N/A',
+    ];
+
+    let command = getHostNotificationsCommand(hostName);
     let hostNotificationLogs = await callServer(command);
-    const filteredHostLogs = filterLogs(hostNotificationLogs, from, until);
+    hostNotificationLogs = filterLogs(hostNotificationLogs, from, until);
+
+    command = getHostStatesCommand(hostName);
+    let hostStateLogs = await callServer(command);
+    hostStateLogs = filterLogs(hostStateLogs, from, until);
+
     const hostData = generateHostAvailability(
-      filteredHostLogs,
+      hostNotificationLogs,
+      hostStateLogs,
       hostStateTypes,
       from,
       until
     );
 
+    // service data
+    const serviceStateTypes = [
+      'OK',
+      'WARNING',
+      'CRITICAL',
+      'UNKNOWN',
+      'Flapping',
+      'H.Down',
+      'Downtime',
+      'N/A',
+    ];
+
     command = getServiceNotificationsCommand(hostName, serviceName);
-    let serviceLogs = await callServer(command);
-    const filteredServiceLogs = filterLogs(serviceLogs, from, until);
+    let serviceNotificationLogs = await callServer(command);
+    serviceNotificationLogs = filterLogs(serviceNotificationLogs, from, until);
+
+    command = getServiceStatesCommand(hostName, serviceName);
+    let serviceStateLogs = await callServer(command);
+    serviceStateLogs = filterLogs(serviceStateLogs, from, until);
+    console.log(serviceStateLogs);
+
     const serviceData = generateServiceAvailability(
-      filteredServiceLogs,
+      serviceNotificationLogs,
+      serviceStateLogs,
       hostData.timelines.DOWN,
       serviceStateTypes,
       from,
       until
     );
 
-    console.log('timeline', serviceData.timelines.summary);
+    // console.log('timeline', serviceData.timelines.summary);
     console.log('availability', serviceData.availabilty);
   } catch (error) {
     console.log(error);

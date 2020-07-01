@@ -5,6 +5,7 @@ const displayFormat = process.env.DISPLAY_FORMAT;
 const dateFormat = process.env.DATE_FORMAT;
 
 const generateLastTimeline = (
+  type,
   stateLogs,
   lastTimeline,
   rangeFrom,
@@ -23,7 +24,16 @@ const generateLastTimeline = (
   const stateLog = stateLogs[0];
   const from = rangeFrom;
   const until = lastTimeline.fromMoment;
-  const state = 'UP';
+  // TODO: change this hardcoded state
+  let state;
+  switch (type) {
+    case 'host':
+      state = 'UP';
+      break;
+    case 'service':
+      state = 'OK';
+      break;
+  }
   const pluginOutput = stateLog[2];
   const duration = (from.diff(until) / rangeDuration) * 100;
 

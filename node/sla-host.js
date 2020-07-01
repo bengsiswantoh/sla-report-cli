@@ -35,4 +35,5 @@ const hostAvailability = async (hostName) => {
   }
 };
 
-hostAvailability('kecapi');
+// hostAvailability('Tambora_FS_Main');
+hostAvailability('RO-Busol');

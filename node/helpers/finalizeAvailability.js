@@ -1,6 +1,6 @@
 const finalizeAvailability = (availability) => {
   for (const key in availability) {
-    availability[key] = Math.round(availability[key]);
+    availability[key] = availability[key].toFixed(2);
   }
 
   return availability;

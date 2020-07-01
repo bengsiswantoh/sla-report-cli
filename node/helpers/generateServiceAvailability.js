@@ -1,5 +1,7 @@
 const moment = require('moment');
 const checkState = require('./checkState');
+const generateLastTimeline = require('./generateLastTimeline');
+const finalizeAvailability = require('./finalizeAvailability');
 require('dotenv').config();
 
 const displayFormat = process.env.DISPLAY_FORMAT;
@@ -55,7 +57,8 @@ const modifyResult = (result, hostDownTimeline, rangeDuration) => {
 };
 
 const generateServiceAvailability = (
-  logs,
+  notificationLogs,
+  stateLogs,
   hostDownTimelines,
   stateTypes,
   rangeFrom,
@@ -64,7 +67,7 @@ const generateServiceAvailability = (
   let until = rangeUntil;
   const rangeDuration = rangeFrom.diff(rangeUntil);
 
-  const availabilty = {};
+  let availabilty = {};
   const timelines = {};
 
   for (const state of stateTypes) {
@@ -75,7 +78,7 @@ const generateServiceAvailability = (
   const timeline = [];
   let hostDownTimeline;
 
-  logs.map((item) => {
+  notificationLogs.map((item) => {
     const from = moment.unix(item[0]);
     let state = checkState(item[1]);
     const pluginOutput = item[2];
@@ -134,7 +137,24 @@ const generateServiceAvailability = (
     return null;
   });
 
+  // add timeline from rangeFrom
+  const lastTimeline = timeline[timeline.length - 1];
+  if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
+    generateLastTimeline(
+      'service',
+      stateLogs,
+      lastTimeline,
+      rangeFrom,
+      rangeDuration,
+      availabilty,
+      timelines,
+      timeline
+    );
+  }
+
   timelines['summary'] = timeline;
+
+  availabilty = finalizeAvailability(availabilty);
 
   return { availabilty, timelines };
 };

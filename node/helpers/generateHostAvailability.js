@@ -7,7 +7,7 @@ require('dotenv').config();
 const displayFormat = process.env.DISPLAY_FORMAT;
 
 const generateHostAvailability = (
-  logs,
+  notificationLogs,
   stateLogs,
   stateTypes,
   rangeFrom,
@@ -24,7 +24,7 @@ const generateHostAvailability = (
     timelines[state] = [];
   }
 
-  timeline = logs.map((item) => {
+  timeline = notificationLogs.map((item) => {
     const from = moment.unix(item[0]);
     const state = checkState(item[1]);
     const pluginOutput = item[2];
@@ -53,8 +53,9 @@ const generateHostAvailability = (
 
   // add timeline from rangeFrom
   const lastTimeline = timeline[timeline.length - 1];
-  if (lastTimeline.from > rangeFrom.format(displayFormat)) {
+  if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
     generateLastTimeline(
+      'host',
       stateLogs,
       lastTimeline,
       rangeFrom,
