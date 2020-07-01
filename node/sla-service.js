@@ -10,7 +10,8 @@ const generateServiceAvailability = require('./helpers/generateServiceAvailabili
 
 const serviceAvailability = async (hostName, serviceName) => {
   const until = moment();
-  const from = moment().subtract(31, 'days');
+  // const from = moment().subtract(31, 'days');
+  const from = moment('2020-01-01 00:00:00');
 
   try {
     // host data
@@ -69,7 +70,7 @@ const serviceAvailability = async (hostName, serviceName) => {
       until
     );
 
-    // console.log('timeline', serviceData.timelines.summary);
+    console.log('timeline', serviceData.timelines.summary);
     console.log('availability', serviceData.availabilty);
   } catch (error) {
     console.log(error);

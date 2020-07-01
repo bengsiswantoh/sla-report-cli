@@ -1,6 +1,6 @@
 const moment = require('moment');
 const checkState = require('./checkState');
-const generateLastTimeline = require('./generateLastTimeline');
+const generateTimelineOutsideNotifications = require('./generateTimelineOutsideNotifications');
 const finalizeAvailability = require('./finalizeAvailability');
 require('dotenv').config();
 
@@ -140,7 +140,7 @@ const generateServiceAvailability = (
   // add timeline from rangeFrom
   const lastTimeline = timeline[timeline.length - 1];
   if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
-    generateLastTimeline(
+    generateTimelineOutsideNotifications(
       'service',
       stateLogs,
       lastTimeline,
