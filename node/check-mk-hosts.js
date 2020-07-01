@@ -32,7 +32,6 @@ const callServer = (command) => {
 const main = async () => {
   let command = 'GET hosts\n';
   command = command + 'Columns: name\n';
-  command = command + 'Limit: 3\n';
   command = command + 'ColumnHeaders: on\n';
   command = command + 'OutputFormat: json\n';
 

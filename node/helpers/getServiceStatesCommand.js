@@ -1,12 +1,12 @@
-const getServiceLogCommand = (hostName, serviceName) => {
+const getServiceStatesCommand = (hostName, serviceName) => {
   let command = 'GET log\n';
   command = command + 'Columns: time state_type plugin_output\n';
   command = command + `Filter: host_name = ${hostName}\n`;
   command = command + `Filter: service_description = ${serviceName}\n`;
-  command = command + 'Filter: type = SERVICE NOTIFICATION\n';
+  command = command + 'Filter: type = CURRENT SERVICE STATE\n';
   command = command + 'OutputFormat: json\n';
 
   return command;
 };
 
-module.exports = getServiceLogCommand;
+module.exports = getServiceStatesCommand;

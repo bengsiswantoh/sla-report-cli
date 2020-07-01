@@ -35,6 +35,7 @@ const addResultBottom = (
 const addHostDown = (hostDownTimeline, availabilty, timelines, timeline) => {
   const hostDownState = 'H.Down';
   hostDownTimeline.state = hostDownState;
+
   availabilty[hostDownState] += hostDownTimeline.durationFloat;
   timelines[hostDownState].push(hostDownTimeline);
   timeline.push(hostDownTimeline);
@@ -138,7 +139,7 @@ const generateServiceAvailability = (
     until = from;
 
     // update data
-    availabilty[state] += parseFloat(duration);
+    availabilty[state] += result.durationFloat;
     timelines[state].push(result);
     timeline.push(result);
 

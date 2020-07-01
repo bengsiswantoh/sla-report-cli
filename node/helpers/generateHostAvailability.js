@@ -50,7 +50,7 @@ const generateHostAvailability = (logs, stateTypes, rangeFrom, rangeUntil) => {
     until = from;
 
     // update data
-    availabilty[state] += parseFloat(duration);
+    availabilty[state] += duration;
     timelines[state].push(result);
 
     return result;

@@ -4,7 +4,7 @@ const net = require('net');
 const host = process.env.HOST;
 const port = process.env.PORT;
 
-const callServer = (command, caller) => {
+const callServer = (command) => {
   return new Promise((resolve, reject) => {
     let result = [];
     const client = new net.Socket();
