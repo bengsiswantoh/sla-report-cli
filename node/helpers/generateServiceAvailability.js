@@ -1,11 +1,11 @@
 const moment = require('moment');
+
 const checkState = require('./checkState');
 const generateTimelineOutsideNotifications = require('./generateTimelineOutsideNotifications');
 const generateTimelineFromStates = require('./generateTimelineFromStates');
 const finalizeAvailability = require('./finalizeAvailability');
-require('dotenv').config();
 
-const displayFormat = process.env.DISPLAY_FORMAT;
+const { displayFormat } = require('./setting');
 
 const addResultBottom = (
   hostDownTimeline,

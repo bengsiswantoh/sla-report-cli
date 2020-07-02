@@ -1,9 +1,6 @@
 const moment = require('moment');
-require('dotenv').config();
 
-const displayFormat = process.env.DISPLAY_FORMAT;
-const dateFormat = process.env.DATE_FORMAT;
-const NAState = process.env.NAState;
+const { displayFormat, dateFormat, NAState } = require('./setting');
 
 const generateTimelineFromStates = (
   stateTypes,
