@@ -1,6 +1,7 @@
 const moment = require('moment');
 const checkState = require('./checkState');
 const generateTimelineOutsideNotifications = require('./generateTimelineOutsideNotifications');
+const generateTimelineFromStates = require('./generateTimelineFromStates');
 const finalizeAvailability = require('./finalizeAvailability');
 require('dotenv').config();
 
@@ -26,9 +27,9 @@ const generateHostAvailability = (
 
   timeline = notificationLogs.map((item) => {
     const from = moment.unix(item[0]);
+    const duration = (from.diff(until) / rangeDuration) * 100;
     const state = checkState(item[1]);
     const pluginOutput = item[2];
-    const duration = (from.diff(until) / rangeDuration) * 100;
 
     const result = {
       fromMoment: from,
@@ -55,10 +56,24 @@ const generateHostAvailability = (
   const lastTimeline = timeline[timeline.length - 1];
   if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
     generateTimelineOutsideNotifications(
-      'host',
+      stateTypes,
       stateLogs,
       lastTimeline,
       rangeFrom,
+      rangeDuration,
+      availabilty,
+      timelines,
+      timeline
+    );
+  }
+
+  // generate timeline no notification
+  if (timeline.length === 0) {
+    generateTimelineFromStates(
+      stateTypes,
+      stateLogs,
+      rangeFrom,
+      rangeUntil,
       rangeDuration,
       availabilty,
       timelines,

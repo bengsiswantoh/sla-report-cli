@@ -80,9 +80,9 @@ const generateServiceAvailability = (
 
   notificationLogs.map((item) => {
     const from = moment.unix(item[0]);
+    let duration = (from.diff(until) / rangeDuration) * 100;
     let state = checkState(item[1]);
     const pluginOutput = item[2];
-    let duration = (from.diff(until) / rangeDuration) * 100;
 
     let result = {
       fromMoment: from,

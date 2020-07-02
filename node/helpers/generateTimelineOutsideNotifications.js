@@ -3,8 +3,7 @@ require('dotenv').config();
 
 const displayFormat = process.env.DISPLAY_FORMAT;
 const dateFormat = process.env.DATE_FORMAT;
-
-const NAState = 'N/A';
+const NAState = process.env.NAState;
 
 const addFromState = (
   stateLogs,
@@ -48,8 +47,6 @@ const addFromState = (
     // add N/A
     until = lastStateFrom;
     duration = (from.diff(until) / rangeDuration) * 100;
-    state = NAState;
-    pluginOutput = '';
     result = {
       fromMoment: from,
       from: from.format(displayFormat),
@@ -57,8 +54,8 @@ const addFromState = (
       until: until.format(displayFormat),
       durationFloat: duration,
       duration: `${duration.toFixed(2)}%`,
-      state,
-      pluginOutput,
+      state: NAState,
+      pluginOutput: '',
     };
   } else {
     // add up
@@ -78,7 +75,7 @@ const addFromState = (
 };
 
 const generateTimelineOutsideNotifications = (
-  type,
+  stateTypes,
   stateLogs,
   lastTimeline,
   rangeFrom,
@@ -94,16 +91,8 @@ const generateTimelineOutsideNotifications = (
 
   let result;
   if (stateLogs.length > 0) {
-    let state;
-    // TODO: change this hardcoded state
-    switch (type) {
-      case 'host':
-        state = 'UP';
-        break;
-      case 'service':
-        state = 'OK';
-        break;
-    }
+    // TODO: need example if host down
+    const state = stateTypes[0];
 
     result = addFromState(
       stateLogs,
@@ -115,10 +104,6 @@ const generateTimelineOutsideNotifications = (
       timelines,
       timeline
     );
-
-    //   const stateLog = stateLogs[0];
-
-    //   pluginOutput = stateLog[2];
   } else {
     const from = rangeFrom;
     const until = lastTimeline.fromMoment;
@@ -138,7 +123,7 @@ const generateTimelineOutsideNotifications = (
     };
   }
 
-  availabilty[result.state] += duration;
+  availabilty[result.state] += result.durationFloat;
   timelines[result.state].push(result);
   timeline.push(result);
 };

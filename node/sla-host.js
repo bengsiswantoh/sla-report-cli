@@ -30,11 +30,11 @@ const hostAvailability = async (hostName) => {
       until
     );
 
-    // console.log('timeline', data.timelines.summary);
-    // console.log('availability', data.availabilty);
+    console.log('timeline', data.timelines.summary);
+    console.log('availability', data.availabilty);
   } catch (error) {
     console.log(error);
   }
 };
 
-hostAvailability('rambutan');
+hostAvailability('Tambori_FS_Backup');
