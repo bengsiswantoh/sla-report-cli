@@ -36,7 +36,7 @@ const main = async () => {
   // command = command + 'Stats: state = 1\n';
   // command = command + 'Stats: state = 2\n';
   // command = command + 'Stats: state = 3\n';
-  command = command + 'Limit: 3\n';
+  // command = command + 'Limit: 3\n';
   command = command + 'ColumnHeaders: on\n';
   command = command + 'OutputFormat: json\n';
 

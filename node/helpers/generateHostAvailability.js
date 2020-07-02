@@ -28,8 +28,7 @@ const generateHostAvailability = (
   timeline = notificationLogs.map((item) => {
     const from = moment.unix(item[0]);
     const duration = (from.diff(until) / rangeDuration) * 100;
-    const state = checkState(item[1]);
-    const pluginOutput = item[2];
+    const { state, pluginOutput } = checkState(item[1], item[2]);
 
     const result = {
       fromMoment: from,

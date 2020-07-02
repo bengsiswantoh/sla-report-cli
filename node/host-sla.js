@@ -32,9 +32,10 @@ const hostAvailability = async (hostName) => {
 
     console.log('timeline', data.timelines.summary);
     console.log('availability', data.availabilty);
+    console.log('host', hostName);
   } catch (error) {
     console.log(error);
   }
 };
 
-hostAvailability('Tambori_FS_Backup');
+hostAvailability('RO-Busol');
