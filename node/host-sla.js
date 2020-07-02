@@ -38,4 +38,4 @@ const hostAvailability = async (hostName) => {
   }
 };
 
-hostAvailability('RO-Busol');
+hostAvailability('Busol PadiNET');

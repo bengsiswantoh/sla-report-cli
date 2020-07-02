@@ -22,14 +22,37 @@ const generateTimelineFromStates = (
   let from = rangeFrom;
   let until = rangeUntil;
   let duration = (from.diff(until) / rangeDuration) * 100;
-  let state = NAState;
+  let state = stateTypes[0];
   let pluginOutput = firstStateLog[2];
   let result;
   if (firstStateLogFrom.format(dateFormat) === rangeUntil.format(dateFormat)) {
     // add up
-    from = lastStateLogFrom;
-    duration = (from.diff(until) / rangeDuration) * 100;
-    state = stateTypes[0];
+    if (rangeFrom.unix() < lastStateLogFrom.unix()) {
+      from = lastStateLogFrom;
+      duration = (from.diff(until) / rangeDuration) * 100;
+
+      result = {
+        fromMoment: from,
+        from: from.format(displayFormat),
+        untilMoment: until,
+        until: until.format(displayFormat),
+        durationFloat: duration,
+        duration: `${duration.toFixed(2)}%`,
+        state,
+        pluginOutput,
+      };
+
+      availabilty[state] += duration;
+      timelines[state].push(result);
+      timeline.push(result);
+
+      // add N/A
+      until = from;
+      from = rangeFrom;
+      duration = (from.diff(until) / rangeDuration) * 100;
+      state = NAState;
+      pluginOutput = '';
+    }
 
     result = {
       fromMoment: from,
@@ -40,25 +63,6 @@ const generateTimelineFromStates = (
       duration: `${duration.toFixed(2)}%`,
       state,
       pluginOutput,
-    };
-
-    availabilty[state] += duration;
-    timelines[state].push(result);
-    timeline.push(result);
-
-    // add N/A
-    until = from;
-    from = rangeFrom;
-    duration = (from.diff(until) / rangeDuration) * 100;
-    result = {
-      fromMoment: from,
-      from: from.format(displayFormat),
-      untilMoment: until,
-      until: until.format(displayFormat),
-      durationFloat: duration,
-      duration: `${duration.toFixed(2)}%`,
-      state: NAState,
-      pluginOutput: '',
     };
   } else {
     state = NAState;

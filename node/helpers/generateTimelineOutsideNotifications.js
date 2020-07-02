@@ -1,5 +1,4 @@
 const moment = require('moment');
-
 const { displayFormat, dateFormat, NAState } = require('./setting');
 
 const addFromState = (
