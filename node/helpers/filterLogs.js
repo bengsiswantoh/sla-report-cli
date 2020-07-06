@@ -4,6 +4,15 @@ const { dateFormat } = require('./setting');
 
 const filterLogs = (logs, rangeFrom, rangeUntil) => {
   filteredLogs = logs.filter((item) => {
+    const from = item[0];
+    return from >= rangeFrom.unix() && from <= rangeUntil.unix();
+  });
+
+  return filteredLogs;
+};
+
+const filterLogsByDate = (logs, rangeFrom, rangeUntil) => {
+  filteredLogs = logs.filter((item) => {
     const from = moment.unix(item[0]);
     return (
       from.format(dateFormat) >= rangeFrom.format(dateFormat) &&
@@ -14,4 +23,4 @@ const filterLogs = (logs, rangeFrom, rangeUntil) => {
   return filteredLogs;
 };
 
-module.exports = filterLogs;
+module.exports = { filterLogs, filterLogsByDate };

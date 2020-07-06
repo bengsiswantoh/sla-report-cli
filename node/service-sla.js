@@ -70,8 +70,8 @@ const serviceAvailability = async (hostName, serviceName) => {
     );
 
     // console.log('hostDataDown', hostData.timelines.DOWN);
-    console.log('timeline', serviceData.timelines['H.Down']);
-    // console.log('timeline', serviceData.timelines.summary);
+    // console.log('timeline', serviceData.timelines['H.Down']);
+    console.log('timeline', serviceData.timelines.summary);
     console.log('availability', serviceData.availabilty);
     console.log('service', hostName, serviceName);
   } catch (error) {
@@ -79,4 +79,4 @@ const serviceAvailability = async (hostName, serviceName) => {
   }
 };
 
-serviceAvailability('RO-Busol', 'Check_MK Discovery');
+serviceAvailability('RO-Busol', 'Check_MK');

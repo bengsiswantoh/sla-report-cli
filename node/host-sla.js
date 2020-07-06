@@ -3,34 +3,25 @@ const callServer = require('./helpers/callServer');
 const filterLogs = require('./helpers/filterLogs');
 const getHostNotificationsCommand = require('./helpers/getHostNotificationsCommand');
 const getHostStatesCommand = require('./helpers/getHostStatesCommand');
-const generateHostAvailability = require('./helpers/generateHostAvailability');
+const generateHostAvailabilityFromNotifications = require('./helpers/generateHostAvailabilityFromNotifications');
 
 const hostAvailability = async (hostName) => {
   const until = moment();
-  // const from = moment().subtract(31, 'days');
-  const from = moment('2020-01-01 00:00:00');
+  const from = moment().subtract(31, 'days');
+  // const from = moment('2020-01-01 00:00:00');
 
-  const stateTypes = ['UP', 'DOWN', 'UNREACH', 'Flapping', 'Downtime', 'N/A'];
+  // const until = moment('2020-05-31 23:59:59');
+  // const from = moment('2020-05-01 00:00:00');
 
   try {
-    let command = getHostNotificationsCommand(hostName);
-    let notificationLogs = await callServer(command);
-    notificationLogs = filterLogs(notificationLogs, from, until);
-
-    command = getHostStatesCommand(hostName);
-    let stateLogs = await callServer(command);
-    // console.log(stateLogs);
-    stateLogs = filterLogs(stateLogs, from, until);
-
-    const data = generateHostAvailability(
-      notificationLogs,
-      stateLogs,
-      stateTypes,
+    const data = await generateHostAvailabilityFromNotifications(
+      hostName,
       from,
       until
     );
 
     console.log('timeline', data.timelines.summary);
+    console.log('timeline', data.timelines.summary.length);
     console.log('availability', data.availabilty);
     console.log('host', hostName);
   } catch (error) {
@@ -38,4 +29,4 @@ const hostAvailability = async (hostName) => {
   }
 };
 
-hostAvailability('Busol PadiNET');
+hostAvailability('RO-Busol');
