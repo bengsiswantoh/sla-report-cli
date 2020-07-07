@@ -11,12 +11,12 @@ const finalizeAvailability = require('./finalizeAvailability');
 
 const {
   displayFormat,
+  dateFormat,
   hostStateTypes,
   hostFilterTypes,
   hostFlappingType,
   hostFlappingStateTypeStarted,
   hostFlappingStateTypeStopped,
-  dateFormat,
 } = require('./setting');
 
 const getState = (pluginOutput) => {
@@ -61,7 +61,7 @@ const generateTimeline = (
 ) => {
   let isFlapping;
   let until = rangeUntil;
-  let timeline = [];
+  const timeline = [];
 
   // filter logs
   const filteredHostLogs = hostLogs.filter((item) =>
@@ -69,7 +69,7 @@ const generateTimeline = (
   );
 
   for (let index = 0; index < filteredHostLogs.length; index++) {
-    let item = filteredHostLogs[index];
+    const item = filteredHostLogs[index];
     let addTimeline = false;
 
     const from = moment.unix(item[0]);
@@ -140,7 +140,7 @@ const generateHostAvailabilityFromAlerts = async (
   rangeFrom,
   rangeUntil
 ) => {
-  // get notification logs
+  // get logs
   let command = getHostLogsCommand(hostName);
   let hostLogs = await callServer(command);
   hostLogs = filterLogs(hostLogs, rangeFrom, rangeUntil);
@@ -160,7 +160,7 @@ const generateHostAvailabilityFromAlerts = async (
   const rangeDuration = rangeFrom.diff(rangeUntil);
 
   // generate timeline
-  timeline = generateTimeline(
+  const timeline = generateTimeline(
     rangeDuration,
     rangeUntil,
     hostLogs,

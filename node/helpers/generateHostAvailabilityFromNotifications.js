@@ -1,3 +1,5 @@
+// NOTE: pending use from alert instead
+
 const moment = require('moment');
 
 const callServer = require('./callServer');

@@ -7,5 +7,14 @@ module.exports = {
   hostFlappingType: 'HOST FLAPPING ALERT',
   hostFlappingStateTypeStarted: 'STARTED',
   hostFlappingStateTypeStopped: 'STOPPED',
-  serviceStateTypes: [''],
+  serviceStateTypes: [
+    'OK',
+    'WARNING',
+    'CRITICAL',
+    'UNKNOWN',
+    'Flapping',
+    'H.Down',
+    'Downtime',
+    'N/A',
+  ],
 };
