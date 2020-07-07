@@ -1,4 +1,4 @@
-const checkState = (state, pluginOutput) => {
+const checkStateFromNotification = (state, pluginOutput) => {
   let regexResult;
 
   // Flapping
@@ -32,4 +32,4 @@ const checkState = (state, pluginOutput) => {
   return { state, pluginOutput };
 };
 
-module.exports = checkState;
+module.exports = checkStateFromNotification;

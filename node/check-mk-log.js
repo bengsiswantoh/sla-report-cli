@@ -36,13 +36,18 @@ const main = async () => {
     command +
     'Columns: time host_name service_description type state state_type message plugin_output\n';
   command = command + 'Filter: host_name = RO-Busol\n';
-  command = command + 'Filter: type ~ HOST\n';
+  command = command + 'Filter: type = CURRENT HOST STATE\n';
   // command = command + 'Limit: 3\n';
   command = command + 'ColumnHeaders: on\n';
   command = command + 'OutputFormat: json\n';
 
   try {
     let result = await callServer(command);
+
+    result = result.filter((item) => {
+      const from = moment.unix(item[0]).format('YYYY-MM-DD');
+      return from === '2020-05-05';
+    });
 
     result = result.map((item) => {
       item[0] = moment.unix(item[0]).format('YYYY-MM-DD HH:mm:ss');

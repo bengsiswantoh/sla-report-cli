@@ -5,12 +5,12 @@ const { filterLogs, filterLogsByDate } = require('./filterLogs');
 const getHostNotificationsCommand = require('./getHostNotificationsCommand');
 const getHostStatesCommand = require('./getHostStatesCommand');
 
-const checkState = require('./checkState');
+const checkStateFromNotification = require('./checkStateFromNotification');
 const generateTimelineOutsideNotifications = require('./generateTimelineOutsideNotifications');
 const generateTimelineFromStates = require('./generateTimelineFromStates');
 const finalizeAvailability = require('./finalizeAvailability');
 
-const { displayFormat, hostStateType } = require('./setting');
+const { displayFormat, hostStateTypes } = require('./setting');
 
 const generateTimeline = (
   rangeDuration,
@@ -24,7 +24,10 @@ const generateTimeline = (
   timeline = notificationLogs.map((item) => {
     const from = moment.unix(item[0]);
     const duration = (from.diff(until) / rangeDuration) * 100;
-    const { state, pluginOutput } = checkState(item[1], item[2]);
+    const { state, pluginOutput } = checkStateFromNotification(
+      item[1],
+      item[2]
+    );
 
     const result = {
       fromMoment: from,
@@ -60,20 +63,16 @@ const generateHostAvailabilityFromAlerts = async (
   let notificationLogs = await callServer(command);
   notificationLogs = filterLogs(notificationLogs, rangeFrom, rangeUntil);
 
-  // get state
-  command = getHostStatesCommand(hostName);
-  let stateLogs = await callServer(command);
-  stateLogs = filterLogsByDate(stateLogs, rangeFrom, rangeUntil);
-
   // init result
   let availabilty = {};
   const timelines = {};
-  for (const state of hostStateType) {
+  for (const state of hostStateTypes) {
     availabilty[state] = 0;
     timelines[state] = [];
   }
   const rangeDuration = rangeFrom.diff(rangeUntil);
 
+  // generate timeline
   timeline = generateTimeline(
     rangeDuration,
     rangeUntil,
@@ -82,11 +81,16 @@ const generateHostAvailabilityFromAlerts = async (
     timelines
   );
 
+  // get state
+  command = getHostStatesCommand(hostName);
+  let stateLogs = await callServer(command);
+  stateLogs = filterLogsByDate(stateLogs, rangeFrom, rangeUntil);
+
   // add timeline from rangeFrom
   const lastTimeline = timeline[timeline.length - 1];
   if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
     generateTimelineOutsideNotifications(
-      hostStateType,
+      hostStateTypes,
       stateLogs,
       lastTimeline,
       rangeFrom,
