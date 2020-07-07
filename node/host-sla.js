@@ -13,12 +13,6 @@ const hostAvailability = async (hostName) => {
   const from = moment('2020-05-01 00:00:00');
 
   try {
-    // const data = await generateHostAvailabilityFromNotifications(
-    //   hostName,
-    //   from,
-    //   until
-    // );
-
     const data = await generateHostAvailabilityFromAlerts(
       hostName,
       from,
@@ -34,4 +28,4 @@ const hostAvailability = async (hostName) => {
   }
 };
 
-hostAvailability('RO-Busol');
+hostAvailability('rambutan');

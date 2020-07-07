@@ -78,7 +78,7 @@ const generateTimeline = (
     const stateType = item[2];
 
     let pluginOutput = item[3];
-    let state = getState(pluginOutput, stateLogs);
+    let state = getState(pluginOutput);
     pluginOutput = updatePluginOutput(
       pluginOutput,
       state,
@@ -95,7 +95,12 @@ const generateTimeline = (
 
       // add timeline after flapping
       addTimeline = true;
-      state = getState(filteredHostLogs[index + 1][3], stateLogs);
+      if (filteredHostLogs[index + 1][1] !== hostFlappingType) {
+        pluginOutput = filteredHostLogs[index + 1][3];
+      } else {
+        pluginOutput = filteredHostLogs[index + 2][3];
+      }
+      state = getState(pluginOutput);
       pluginOutput = '';
     }
 
@@ -172,6 +177,20 @@ const generateHostAvailabilityFromAlerts = async (
       stateLogs,
       lastTimeline,
       rangeFrom,
+      rangeDuration,
+      availabilty,
+      timelines,
+      timeline
+    );
+  }
+
+  // generate timeline no notification
+  if (timeline.length === 0) {
+    generateTimelineFromStates(
+      hostStateTypes,
+      stateLogs,
+      rangeFrom,
+      rangeUntil,
       rangeDuration,
       availabilty,
       timelines,
