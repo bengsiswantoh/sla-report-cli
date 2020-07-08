@@ -70,7 +70,7 @@ const addFromState = (
   return result;
 };
 
-const generateTimelineOutsideNotifications = (
+const generateTimelineOutsideLogs = (
   stateTypes,
   stateLogs,
   lastTimeline,
@@ -124,4 +124,4 @@ const generateTimelineOutsideNotifications = (
   timeline.push(result);
 };
 
-module.exports = generateTimelineOutsideNotifications;
+module.exports = generateTimelineOutsideLogs;

@@ -4,6 +4,11 @@ const hostDowntimeType = 'HOST DOWNTIME ALERT';
 const serviceFlappingType = 'SERVICE FLAPPING ALERT';
 
 module.exports = {
+  hostName: 'RO-Busol',
+  serviceName: 'Check_MK',
+  from: '2020-05-01 00:00:00',
+  until: '2020-06-01 23:59:59',
+
   displayFormat: 'YYYY-MM-DD HH:mm:ss',
   dateFormat: 'YYYY-MM-DD',
 
@@ -28,6 +33,7 @@ module.exports = {
     'Downtime',
     'N/A',
   ],
-  serviceFilterTypes: ['SERVICE ALERT', serviceFlappingType],
+  // serviceFilterTypes: ['SERVICE ALERT', serviceFlappingType],
+  serviceFilterTypes: ['SERVICE ALERT'],
   serviceFlappingType,
 };

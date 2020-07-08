@@ -5,7 +5,7 @@ const { filterLogs, filterLogsByDate } = require('./filterLogs');
 const getHostLogsCommand = require('./getHostLogsCommand');
 const getHostStatesCommand = require('./getHostStatesCommand');
 
-const generateTimelineOutsideNotifications = require('./generateTimelineOutsideNotifications');
+const generateTimelineOutsideLogs = require('./generateTimelineOutsideLogs');
 const generateTimelineFromStates = require('./generateTimelineFromStates');
 const finalizeAvailability = require('./finalizeAvailability');
 
@@ -185,7 +185,7 @@ const generateHostAvailabilityFromAlerts = async (
   // add timeline from rangeFrom
   const lastTimeline = timeline[timeline.length - 1];
   if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
-    generateTimelineOutsideNotifications(
+    generateTimelineOutsideLogs(
       hostStateTypes,
       stateLogs,
       lastTimeline,
@@ -197,7 +197,7 @@ const generateHostAvailabilityFromAlerts = async (
     );
   }
 
-  // generate timeline no notification
+  // generate timeline with no logs
   if (timeline.length === 0) {
     generateTimelineFromStates(
       hostStateTypes,
