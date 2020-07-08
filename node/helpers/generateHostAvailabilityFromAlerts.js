@@ -15,8 +15,9 @@ const {
   hostStateTypes,
   hostFilterTypes,
   hostFlappingType,
-  hostFlappingStateTypeStarted,
-  hostFlappingStateTypeStopped,
+  hostDowntimeType,
+  stateTypeStarted,
+  stateTypeStopped,
 } = require('./setting');
 
 const getState = (pluginOutput) => {
@@ -54,26 +55,26 @@ const updatePluginOutput = (pluginOutput, state, from, until, stateLogs) => {
 const generateTimeline = (
   rangeDuration,
   rangeUntil,
-  hostLogs,
+  logs,
   stateLogs,
   availabilty,
   timelines
 ) => {
-  let isFlapping;
+  // let isFlapping;
+  let ignoreLine;
   let until = rangeUntil;
   const timeline = [];
 
   // filter logs
-  const filteredHostLogs = hostLogs.filter((item) =>
-    hostFilterTypes.includes(item[1])
-  );
+  const filteredLogs = logs.filter((item) => hostFilterTypes.includes(item[1]));
 
-  for (let index = 0; index < filteredHostLogs.length; index++) {
-    const item = filteredHostLogs[index];
+  for (let index = 0; index < filteredLogs.length; index++) {
+    const item = filteredLogs[index];
     let addTimeline = false;
 
     const from = moment.unix(item[0]);
     const duration = (from.diff(until) / rangeDuration) * 100;
+
     const type = item[1];
     const stateType = item[2];
 
@@ -87,30 +88,42 @@ const generateTimeline = (
       stateLogs
     );
 
+    // TODO: Test Downtime
+    // Found flapping or downtime stopped
     if (
-      type === hostFlappingType &&
-      stateType === hostFlappingStateTypeStopped
+      stateType === stateTypeStopped &&
+      (type === hostFlappingType || type === hostDowntimeType)
     ) {
-      isFlapping = true;
+      // isFlapping = true;
+      ignoreLine = true;
 
       // add timeline after flapping
       addTimeline = true;
-      if (filteredHostLogs[index + 1][1] !== hostFlappingType) {
-        pluginOutput = filteredHostLogs[index + 1][3];
-      } else {
-        pluginOutput = filteredHostLogs[index + 2][3];
+      let nextIndex = index + 1;
+      if (
+        filteredLogs[nextIndex][1] === hostFlappingType ||
+        filteredLogs[nextIndex][1] === hostDowntimeType
+      ) {
+        nextIndex += 1;
       }
+      pluginOutput = filteredLogs[nextIndex][3];
       state = getState(pluginOutput);
       pluginOutput = '';
     }
 
-    if (isFlapping && stateType === hostFlappingStateTypeStarted) {
-      isFlapping = false;
-      state = 'Flapping';
+    // Found started log
+    if (ignoreLine && stateType === stateTypeStarted) {
+      ignoreLine = false;
+      if (type === hostFlappingType) {
+        state = 'Flapping';
+      }
+      if (type === hostDowntimeType) {
+        state = 'Downtime';
+      }
       pluginOutput = '';
     }
 
-    if (!isFlapping || addTimeline) {
+    if (!ignoreLine || addTimeline) {
       const result = {
         fromMoment: from,
         from: from.format(displayFormat),

@@ -9,8 +9,8 @@ const hostAvailability = async (hostName) => {
   // const from = moment().subtract(40, 'days');
   // const from = moment('2020-01-01 00:00:00');
 
-  const until = moment('2020-07-01 23:59:59');
-  const from = moment('2020-06-01 00:00:00');
+  const until = moment('2020-06-01 23:59:59');
+  const from = moment('2020-05-01 00:00:00');
 
   try {
     const data = await generateHostAvailabilityFromAlerts(
@@ -28,4 +28,4 @@ const hostAvailability = async (hostName) => {
   }
 };
 
-hostAvailability('Tambora_FS_Main');
+hostAvailability('RO-Busol');
