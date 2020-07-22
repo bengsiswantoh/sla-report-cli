@@ -6,8 +6,8 @@ const generateHostAvailabilityFromAlerts = require('./helpers/generateHostAvaila
 const { hostName, from, until, displayFormat } = require('./helpers/setting');
 
 const hostAvailability = async (hostName, from, until) => {
-  until = moment('2020-06-01 23:59:59');
-  from = moment('2020-05-01 00:00:00');
+  from = moment(from);
+  until = moment(until);
 
   try {
     const data = await generateHostAvailabilityFromAlerts(

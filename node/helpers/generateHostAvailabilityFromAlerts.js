@@ -29,6 +29,9 @@ const getState = (pluginOutput) => {
     case 'CRITICAL':
       state = 'DOWN';
       break;
+    case 'WARNING':
+      state = 'UP';
+      break;
   }
 
   return state;
