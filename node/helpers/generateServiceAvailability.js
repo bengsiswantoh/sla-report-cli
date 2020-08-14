@@ -17,58 +17,14 @@ const {
   serviceStateTypes,
   serviceFilterTypes,
   serviceFlappingType,
-  serviceWarningStates,
-  serviceCriticalStates,
+  stateTypeStarted,
+  stateTypeStopped,
 } = require('./setting');
 
-const addResultBottom = (
-  hostDownTimeline,
-  until,
-  rangeDuration,
-  state,
-  pluginOutput,
-  availabilty,
-  timelines,
-  timeline
-) => {
-  const fromBottom = hostDownTimeline.untilMoment;
-  const durationBottom = (fromBottom.diff(until) / rangeDuration) * 100;
-
-  // resultBottom
-  let resultBottom = {
-    fromMoment: fromBottom,
-    from: fromBottom.format(displayFormat),
-    untilMoment: until,
-    until: until.format(displayFormat),
-    durationFloat: durationBottom,
-    duration: `${durationBottom.toFixed(2)}%`,
-    state,
-    pluginOutput,
-  };
-  availabilty[state] += parseFloat(durationBottom);
-  timelines[state].push(resultBottom);
-  timeline.push(resultBottom);
-};
-
-const addHostDown = (hostDownTimeline, availabilty, timelines, timeline) => {
-  const hostDownState = 'H.Down';
-  hostDownTimeline.state = hostDownState;
-
-  availabilty[hostDownState] += hostDownTimeline.durationFloat;
-  timelines[hostDownState].push(hostDownTimeline);
-  timeline.push(hostDownTimeline);
-};
-
-const modifyResult = (result, hostDownTimeline, rangeDuration) => {
-  result.untilMoment = hostDownTimeline.fromMoment;
-  result.until = hostDownTimeline.from;
-
-  const duration =
-    (result.fromMoment.diff(result.untilMoment) / rangeDuration) * 100;
-  result.durationFloat = duration;
-  result.duration = `${duration.toFixed(2)}%`;
-
-  return result;
+const addResult = (result, availabilty, timelines, timeline) => {
+  availabilty[result.state] += result.durationFloat;
+  timelines[result.state].push(result);
+  timeline.push(result);
 };
 
 const getState = (pluginOutput) => {
@@ -94,13 +50,12 @@ const generateTimeline = (
   rangeDuration,
   rangeUntil,
   logs,
-  stateLogs,
-  hostDownTimelines,
+  hostDownTimes,
   availabilty,
   timelines
 ) => {
-  // TODO: add flapping
-  let hostDownTimeline;
+  let tempCount = 0;
+  let hostDownTime;
   let ignoreLine;
   let until = rangeUntil;
   const timeline = [];
@@ -112,80 +67,131 @@ const generateTimeline = (
 
   for (let index = 0; index < filteredLogs.length; index++) {
     const item = filteredLogs[index];
+    let addTimeline = false;
 
-    const from = moment.unix(item[0]);
-    const duration = (from.diff(until) / rangeDuration) * 100;
+    let from = moment.unix(item[0]);
+    let duration = (from.diff(until) / rangeDuration) * 100;
 
     const type = item[1];
     const stateType = item[2];
 
     let pluginOutput = item[3];
     let state = getState(pluginOutput);
-    // TODO: update pluginOutput when state CRIT
 
-    let result = {
-      fromMoment: from,
-      from: from.format(displayFormat),
-      untilMoment: until,
-      until: until.format(displayFormat),
-      durationFloat: duration,
-      duration: `${duration.toFixed(2)}%`,
-      state,
-      pluginOutput,
-    };
-
-    // check host down timeline
-    // FIXME: error
-    // {
-    //   from: '2020-05-29 04:01:03',
-    //   until: '2020-05-29 04:16:03',
-    //   durationFloat: 0.032552095107094586,
-    //   state: 'CRITICAL',
-    //   pluginOutput: 'CRIT - SNMP Error on 202.6.231.102: Timeout: No Response from 202.6.231.102 (Exit-Code: 1), execution time 6.0 sec'
-    // },
-    // {
-    //   from: '2020-05-29 04:00:17',
-    //   until: '2020-05-29 04:15:46',
-    //   durationFloat: 0.0336009959494343,
-    //   state: 'H.Down',
-    //   pluginOutput: 'CRITICAL - 202.6.231.102: rta nan, lost 100%'
-    // },
-
-    if (hostDownTimeline || hostDownTimelines.length > 0) {
-      if (!hostDownTimeline) {
-        hostDownTimeline = hostDownTimelines.shift();
+    // Found flapping or downtime stopped
+    if (stateType === stateTypeStopped && type === serviceFlappingType) {
+      ignoreLine = true;
+      // add timeline after flapping
+      addTimeline = true;
+      let nextIndex = index + 1;
+      if (filteredLogs[nextIndex][1] === serviceFlappingType) {
+        nextIndex += 1;
       }
 
-      while (
-        hostDownTimeline &&
-        from.format(displayFormat) < hostDownTimeline.from
-      ) {
-        if (until.format(displayFormat) > hostDownTimeline.until) {
-          addResultBottom(
-            hostDownTimeline,
-            until,
-            rangeDuration,
-            state,
-            pluginOutput,
-            availabilty,
-            timelines,
-            timeline
-          );
-        }
-        addHostDown(hostDownTimeline, availabilty, timelines, timeline);
-        result = modifyResult(result, hostDownTimeline, rangeDuration);
-        until = result.untilMoment;
-        hostDownTimeline = hostDownTimelines.shift();
-      }
+      pluginOutput = filteredLogs[nextIndex][3];
+      state = getState(pluginOutput);
+      pluginOutput = '';
     }
 
-    // update data
-    availabilty[state] += duration;
-    timelines[state].push(result);
-    timeline.push(result);
+    // Found started log
+    if (ignoreLine && stateType === stateTypeStarted) {
+      ignoreLine = false;
+      if (type === serviceFlappingType) {
+        state = 'Flapping';
+      }
+      pluginOutput = '';
+    }
 
-    // update until
-    until = from;
+    // TODO: problem when flapping and host down
+    if ((!ignoreLine || addTimeline) && from <= until) {
+      let result = {
+        fromMoment: from,
+        from: from.format(displayFormat),
+        untilMoment: until,
+        until: until.format(displayFormat),
+        durationFloat: duration,
+        duration: `${duration.toFixed(2)}%`,
+        state,
+        pluginOutput,
+      };
+
+      if (hostDownTime || hostDownTimes.length > 0) {
+        if (!hostDownTime) {
+          hostDownTime = hostDownTimes.shift();
+          tempCount++;
+        }
+
+        // FIXME: harusnya ada host down
+        // {
+        //   fromMoment: Moment<2020-07-17T09:19:01+07:00>,
+        //   from: '2020-07-17 09:19:01',
+        //   untilMoment: Moment<2020-07-17T09:34:35+07:00>,
+        //   until: '2020-07-17 09:34:35',
+        //   durationFloat: 0.0337818287037037,
+        //   duration: '0.03%',
+        //   state: 'Flapping',
+        //   pluginOutput: ''
+        // },
+        // {
+        //   fromMoment: Moment<2020-07-17T09:19:01+07:00>,
+        //   from: '2020-07-17 09:19:01',
+        //   untilMoment: Moment<2020-07-17T09:19:01+07:00>,
+        //   until: '2020-07-17 09:19:01',
+        //   durationFloat: -0,
+        //   duration: '0.00%',
+        //   state: 'OK',
+        //   pluginOutput: 'OK - execution time 55.9 sec'
+        // },
+
+        while (hostDownTime && hostDownTime.untilMoment > from) {
+          const resultBefore = { ...result };
+          result.fromMoment = hostDownTime.untilMoment;
+          result.from = hostDownTime.until;
+          result.durationFloat =
+            (result.fromMoment.diff(result.untilMoment) / rangeDuration) * 100;
+          result.duration = `${result.durationFloat.toFixed(2)}%`;
+          addResult(result, availabilty, timelines, timeline);
+
+          // FIXME:
+          console.log('before ============', resultBefore);
+          console.log('result modif ============', result);
+
+          result = { ...hostDownTime, state: 'H.Down' };
+
+          if (from > result.fromMoment) {
+            from = result.fromMoment;
+          } else {
+            addResult(result, availabilty, timelines, timeline);
+            until = result.fromMoment;
+
+            // FIXME:
+            console.log('result modif ============', result);
+
+            duration = (from.diff(until) / rangeDuration) * 100;
+            result = {
+              ...resultBefore,
+              fromMoment: from,
+              from: from.format(displayFormat),
+              untilMoment: until,
+              until: until.format(displayFormat),
+              durationFloat: duration,
+              duration: `${duration.toFixed(2)}%`,
+            };
+          }
+
+          hostDownTime = hostDownTimes.shift();
+          tempCount++;
+        }
+      }
+
+      addResult(result, availabilty, timelines, timeline);
+
+      // update until
+      until = from;
+
+      // FIXME:
+      console.log('result normal ============', result);
+    }
   }
 
   return timeline;
@@ -223,17 +229,15 @@ const generateServiceAvailability = async (
   }
   const rangeDuration = rangeFrom.diff(rangeUntil);
 
-  const timeline = generateTimeline(
+  let timeline = generateTimeline(
     rangeDuration,
     rangeUntil,
     serviceLogs,
-    stateLogs,
     hostData.timelines.DOWN,
     availabilty,
     timelines
   );
 
-  // TODO: add host down data
   // add timeline from rangeFrom
   const lastTimeline = timeline[timeline.length - 1];
   if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
@@ -262,8 +266,6 @@ const generateServiceAvailability = async (
       timeline
     );
   }
-
-  console.log(timeline);
 
   timelines['summary'] = timeline;
   availabilty = finalizeAvailability(availabilty);
