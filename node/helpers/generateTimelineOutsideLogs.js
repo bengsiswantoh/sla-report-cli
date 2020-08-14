@@ -87,7 +87,6 @@ const generateTimelineOutsideLogs = (
 
   let result;
   if (stateLogs.length > 0) {
-    // TODO: need example if host down
     const state = stateTypes[0];
 
     result = addFromState(

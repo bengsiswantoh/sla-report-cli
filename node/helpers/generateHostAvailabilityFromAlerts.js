@@ -63,7 +63,6 @@ const generateTimeline = (
   availabilty,
   timelines
 ) => {
-  // let isFlapping;
   let ignoreLine;
   let until = rangeUntil;
   const timeline = [];
@@ -91,13 +90,11 @@ const generateTimeline = (
       stateLogs
     );
 
-    // TODO: Test Downtime
     // Found flapping or downtime stopped
     if (
       stateType === stateTypeStopped &&
       (type === hostFlappingType || type === hostDowntimeType)
     ) {
-      // isFlapping = true;
       ignoreLine = true;
 
       // add timeline after flapping
