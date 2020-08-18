@@ -58,6 +58,7 @@ const updatePluginOutput = (pluginOutput, state, from, until, stateLogs) => {
 const generateTimeline = (
   rangeDuration,
   rangeUntil,
+  filterTypes,
   logs,
   stateLogs,
   availabilty,
@@ -68,7 +69,7 @@ const generateTimeline = (
   const timeline = [];
 
   // filter logs
-  const filteredLogs = logs.filter((item) => hostFilterTypes.includes(item[1]));
+  const filteredLogs = logs.filter((item) => filterTypes.includes(item[1]));
 
   for (let index = 0; index < filteredLogs.length; index++) {
     const item = filteredLogs[index];
@@ -151,7 +152,8 @@ const generateTimeline = (
 const generateHostAvailabilityFromAlerts = async (
   hostName,
   rangeFrom,
-  rangeUntil
+  rangeUntil,
+  filterTypes = hostFilterTypes
 ) => {
   // get logs
   let command = getHostLogsCommand(hostName);
@@ -176,6 +178,7 @@ const generateHostAvailabilityFromAlerts = async (
   const timeline = generateTimeline(
     rangeDuration,
     rangeUntil,
+    filterTypes,
     hostLogs,
     stateLogs,
     availabilty,

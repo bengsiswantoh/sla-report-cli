@@ -54,7 +54,6 @@ const generateTimeline = (
   availabilty,
   timelines
 ) => {
-  let tempCount = 0;
   let hostDownTime;
   let ignoreLine;
   let until = rangeUntil;
@@ -102,7 +101,6 @@ const generateTimeline = (
       pluginOutput = '';
     }
 
-    // TODO: problem when flapping and host down
     if ((!ignoreLine || addTimeline) && from <= until) {
       let result = {
         fromMoment: from,
@@ -118,10 +116,9 @@ const generateTimeline = (
       if (hostDownTime || hostDownTimes.length > 0) {
         if (!hostDownTime) {
           hostDownTime = hostDownTimes.shift();
-          tempCount++;
         }
 
-        // FIXME: harusnya ada host down
+        // FIXME: harusnya ada host down, ternyata di host ada flapping
         // {
         //   fromMoment: Moment<2020-07-17T09:19:01+07:00>,
         //   from: '2020-07-17 09:19:01',
@@ -152,10 +149,6 @@ const generateTimeline = (
           result.duration = `${result.durationFloat.toFixed(2)}%`;
           addResult(result, availabilty, timelines, timeline);
 
-          // FIXME:
-          console.log('before ============', resultBefore);
-          console.log('result modif ============', result);
-
           result = { ...hostDownTime, state: 'H.Down' };
 
           if (from > result.fromMoment) {
@@ -163,9 +156,6 @@ const generateTimeline = (
           } else {
             addResult(result, availabilty, timelines, timeline);
             until = result.fromMoment;
-
-            // FIXME:
-            console.log('result modif ============', result);
 
             duration = (from.diff(until) / rangeDuration) * 100;
             result = {
@@ -180,7 +170,6 @@ const generateTimeline = (
           }
 
           hostDownTime = hostDownTimes.shift();
-          tempCount++;
         }
       }
 
@@ -188,9 +177,6 @@ const generateTimeline = (
 
       // update until
       until = from;
-
-      // FIXME:
-      console.log('result normal ============', result);
     }
   }
 
@@ -207,7 +193,8 @@ const generateServiceAvailability = async (
   const hostData = await generateHostAvailabilityFromAlerts(
     hostName,
     rangeFrom,
-    rangeUntil
+    rangeUntil,
+    ['HOST ALERT']
   );
 
   // get logs

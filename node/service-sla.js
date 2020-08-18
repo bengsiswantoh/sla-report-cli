@@ -24,8 +24,8 @@ const serviceAvailability = async (hostName, serviceName, from, until) => {
 
     // console.log('hostDataDown', hostData.timelines.DOWN);
     // console.log('timeline', serviceData.timelines['H.Down']);
-    // console.log('timeline', serviceData.timelines.summary);
-    // console.log('availability', serviceData.availabilty);
+    console.log('timeline', serviceData.timelines.summary);
+    console.log('availability', serviceData.availabilty);
 
     console.log('host', hostName);
     console.log('service', serviceName);
