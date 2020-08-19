@@ -28,8 +28,6 @@ const addHostDown = (
   hostDownTimes,
   rangeDuration
 ) => {
-  // return timeline;
-
   // reset availability and timelines
   let hostDownTime;
   const timelineWithHost = [];
@@ -41,12 +39,21 @@ const addHostDown = (
   let until = timeline[0].untilMoment;
   for (let index = 0; index < timeline.length; index++) {
     let result = timeline[index];
+    const { state, pluginOutput } = result;
 
     let from = result.fromMoment;
     let duration = (from.diff(until) / rangeDuration) * 100;
 
-    result.untilMoment = until;
-    result.durationFloat = duration;
+    result = {
+      fromMoment: from,
+      from: from.format(displayFormat),
+      untilMoment: until,
+      until: until.format(displayFormat),
+      durationFloat: duration,
+      duration: `${duration.toFixed(2)}%`,
+      state,
+      pluginOutput,
+    };
 
     if (hostDownTime || hostDownTimes.length > 0) {
       if (!hostDownTime) {
@@ -81,14 +88,17 @@ const addHostDown = (
             duration: `${duration.toFixed(2)}%`,
           };
         }
+
         hostDownTime = hostDownTimes.shift();
       }
     }
 
-    addResult(result, availabilty, timelines, timelineWithHost);
+    if (from <= until) {
+      addResult(result, availabilty, timelines, timelineWithHost);
 
-    // update until
-    until = from;
+      // update until
+      until = from;
+    }
   }
 
   return timelineWithHost;
@@ -114,6 +124,12 @@ const getState = (pluginOutput) => {
   regexResult = state.match(regexCrit);
   if (regexResult) {
     state = serviceStateTypes[2];
+  }
+
+  const regexUnknown = /UNKOWN\w*/;
+  regexResult = state.match(regexUnknown);
+  if (regexResult) {
+    state = serviceStateTypes[3];
   }
 
   return state;
@@ -142,7 +158,6 @@ const generateTimeline = (
   rangeUntil,
   logs,
   stateLogs,
-  hostDownTimes,
   availabilty,
   timelines
 ) => {
@@ -212,44 +227,6 @@ const generateTimeline = (
         pluginOutput,
       };
 
-      // if (hostDownTime || hostDownTimes.length > 0) {
-      //   if (!hostDownTime) {
-      //     hostDownTime = hostDownTimes.shift();
-      //   }
-
-      //   while (hostDownTime && hostDownTime.untilMoment > from) {
-      //     const resultBefore = { ...result };
-      //     result.fromMoment = hostDownTime.untilMoment;
-      //     result.from = hostDownTime.until;
-      //     result.durationFloat =
-      //       (result.fromMoment.diff(result.untilMoment) / rangeDuration) * 100;
-      //     result.duration = `${result.durationFloat.toFixed(2)}%`;
-      //     addResult(result, availabilty, timelines, timeline);
-
-      //     result = { ...hostDownTime, state: 'H.Down' };
-
-      //     if (from > result.fromMoment) {
-      //       from = result.fromMoment;
-      //     } else {
-      //       addResult(result, availabilty, timelines, timeline);
-      //       until = result.fromMoment;
-
-      //       duration = (from.diff(until) / rangeDuration) * 100;
-      //       result = {
-      //         ...resultBefore,
-      //         fromMoment: from,
-      //         from: from.format(displayFormat),
-      //         untilMoment: until,
-      //         until: until.format(displayFormat),
-      //         durationFloat: duration,
-      //         duration: `${duration.toFixed(2)}%`,
-      //       };
-      //     }
-
-      //     hostDownTime = hostDownTimes.shift();
-      //   }
-      // }
-
       addResult(result, availabilty, timelines, timeline);
 
       // update until
@@ -298,7 +275,6 @@ const generateServiceAvailability = async (
     rangeUntil,
     serviceLogs,
     stateLogs,
-    hostData.timelines.DOWN,
     availabilty,
     timelines
   );
@@ -319,7 +295,7 @@ const generateServiceAvailability = async (
   }
 
   // generate timeline with no logs
-  if (timeline.length === 0) {
+  if (timeline.length === 0 && stateLogs.length > 1) {
     generateTimelineFromStates(
       serviceStateTypes,
       stateLogs,
@@ -332,13 +308,16 @@ const generateServiceAvailability = async (
     );
   }
 
-  timeline = addHostDown(
-    timeline,
-    timelines,
-    availabilty,
-    hostData.timelines.DOWN,
-    rangeDuration
-  );
+  const hostDownTimes = hostData.timelines.DOWN;
+  if (timeline.length > 1 && hostDownTimes.length > 0) {
+    timeline = addHostDown(
+      timeline,
+      timelines,
+      availabilty,
+      hostDownTimes,
+      rangeDuration
+    );
+  }
 
   timelines['summary'] = timeline;
   availabilty = finalizeAvailability(availabilty);
