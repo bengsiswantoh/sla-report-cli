@@ -3,9 +3,7 @@ require('dotenv').config();
 const server = process.env.SERVER;
 const port = process.env.PORT;
 
-const {
-  generateServiceTimeline,
-} = require('./helpers/generateServiceTimeline');
+const generateServiceTimeline = require('./helpers/generateServiceTimeline');
 
 const {
   hostName,
@@ -33,8 +31,8 @@ const serviceAvailability = async () => {
 
     console.log('host', hostName);
     console.log('service', serviceName);
-    console.log('from', from.format(displayFormat));
-    console.log('until', until.format(displayFormat));
+    console.log('from', from);
+    console.log('until', until);
   } catch (error) {
     console.log(error);
   }

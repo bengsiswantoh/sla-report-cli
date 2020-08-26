@@ -1,9 +1,11 @@
 const moment = require('moment');
 
-const { generateHostTimeline } = require('./generateHostTimeline');
+const generateHostTimeline = require('./generateHostTimeline');
 
-const getServiceLogsCommand = require('./checkmkHelper/getServiceLogsCommand');
-const getServiceStatesCommand = require('./checkmkHelper/getServiceStatesCommand');
+const {
+  getServiceLogsCommand,
+  getServiceStatesCommand,
+} = require('./checkmkHelper/liveStatusCommand');
 const callServer = require('./checkmkHelper/callServer');
 const { filterLogs, filterLogsByDate } = require('./checkmkHelper/filterLogs');
 
@@ -336,4 +338,4 @@ const generateServiceTimeline = async (
   }
 };
 
-module.exports = { generateServiceTimeline };
+module.exports = generateServiceTimeline;

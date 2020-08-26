@@ -231,4 +231,4 @@ const generateHostTimeline = async (
   }
 };
 
-module.exports = { generateHostTimeline };
+module.exports = generateHostTimeline;
