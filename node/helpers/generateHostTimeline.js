@@ -1,13 +1,15 @@
 const moment = require('moment');
 
-const callServer = require('./callServer');
-const { filterLogs, filterLogsByDate } = require('./filterLogs');
-const getHostLogsCommand = require('./getHostLogsCommand');
-const getHostStatesCommand = require('./getHostStatesCommand');
+const {
+  getHostLogsCommand,
+  getHostStatesCommand,
+} = require('./checkmkHelper/liveStatusCommand');
+const callServer = require('./checkmkHelper/callServer');
+const { filterLogs, filterLogsByDate } = require('./checkmkHelper/filterLogs');
 
-const generateTimelineOutsideLogs = require('./generateTimelineOutsideLogs');
-const generateTimelineFromStates = require('./generateTimelineFromStates');
-const finalizeAvailability = require('./finalizeAvailability');
+const generateTimelineOutsideLogs = require('./checkmkHelper/generateTimelineOutsideLogs');
+const generateTimelineFromStates = require('./checkmkHelper/generateTimelineFromStates');
+const finalizeAvailability = require('./checkmkHelper/finalizeAvailability');
 
 const {
   displayFormat,
@@ -18,7 +20,7 @@ const {
   hostDowntimeType,
   stateTypeStarted,
   stateTypeStopped,
-} = require('./setting');
+} = require('./checkmkHelper/setting');
 
 const getState = (pluginOutput) => {
   let state = pluginOutput.split(' ')[0];
@@ -149,74 +151,84 @@ const generateTimeline = (
   return timeline;
 };
 
-const generateHostAvailabilityFromAlerts = async (
+const generateHostTimeline = async (
+  server,
+  port,
   hostName,
-  rangeFrom,
-  rangeUntil,
+  from,
+  until,
   filterTypes = hostFilterTypes
 ) => {
-  // get logs
-  let command = getHostLogsCommand(hostName);
-  let hostLogs = await callServer(command);
-  hostLogs = filterLogs(hostLogs, rangeFrom, rangeUntil);
+  try {
+    const rangeFrom = moment(from);
+    const rangeUntil = moment(until);
 
-  // get state
-  command = getHostStatesCommand(hostName);
-  let stateLogs = await callServer(command);
-  stateLogs = filterLogsByDate(stateLogs, rangeFrom, rangeUntil);
+    // get logs
+    let command = getHostLogsCommand(hostName);
+    let hostLogs = await callServer(command, server, port);
+    hostLogs = filterLogs(hostLogs, rangeFrom, rangeUntil);
 
-  // init result
-  let availabilty = {};
-  const timelines = {};
-  for (const state of hostStateTypes) {
-    availabilty[state] = 0;
-    timelines[state] = [];
-  }
-  const rangeDuration = rangeFrom.diff(rangeUntil);
+    // get state
+    command = getHostStatesCommand(hostName);
+    let stateLogs = await callServer(command, server, port);
+    stateLogs = filterLogsByDate(stateLogs, rangeFrom, rangeUntil);
 
-  // generate timeline
-  const timeline = generateTimeline(
-    rangeDuration,
-    rangeUntil,
-    filterTypes,
-    hostLogs,
-    stateLogs,
-    availabilty,
-    timelines
-  );
+    // init result
+    let availabilty = {};
+    const timelines = {};
+    for (const state of hostStateTypes) {
+      availabilty[state] = 0;
+      timelines[state] = [];
+    }
+    const rangeDuration = rangeFrom.diff(rangeUntil);
 
-  // add timeline from rangeFrom
-  const lastTimeline = timeline[timeline.length - 1];
-  if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
-    generateTimelineOutsideLogs(
-      hostStateTypes,
-      stateLogs,
-      lastTimeline,
-      rangeFrom,
+    // generate timeline
+    const timeline = generateTimeline(
       rangeDuration,
-      availabilty,
-      timelines,
-      timeline
-    );
-  }
-
-  // generate timeline with no logs
-  if (timeline.length === 0) {
-    generateTimelineFromStates(
-      hostStateTypes,
-      stateLogs,
-      rangeFrom,
       rangeUntil,
-      rangeDuration,
+      filterTypes,
+      hostLogs,
+      stateLogs,
       availabilty,
-      timelines,
-      timeline
+      timelines
     );
-  }
 
-  timelines['summary'] = timeline;
-  availabilty = finalizeAvailability(availabilty);
-  return { availabilty, timelines };
+    // add timeline from rangeFrom
+    const lastTimeline = timeline[timeline.length - 1];
+    if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
+      generateTimelineOutsideLogs(
+        hostStateTypes,
+        stateLogs,
+        lastTimeline,
+        rangeFrom,
+        rangeDuration,
+        availabilty,
+        timelines,
+        timeline
+      );
+    }
+
+    // generate timeline with no logs
+    if (timeline.length === 0) {
+      generateTimelineFromStates(
+        hostStateTypes,
+        stateLogs,
+        rangeFrom,
+        rangeUntil,
+        rangeDuration,
+        availabilty,
+        timelines,
+        timeline
+      );
+    }
+
+    timelines['summary'] = timeline;
+    availabilty = finalizeAvailability(availabilty);
+    return { availabilty, timelines };
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 };
 
-module.exports = generateHostAvailabilityFromAlerts;
+module.exports = { generateHostTimeline };

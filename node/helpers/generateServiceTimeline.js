@@ -1,15 +1,15 @@
 const moment = require('moment');
 
-const generateHostAvailabilityFromAlerts = require('./generateHostAvailabilityFromAlerts');
+const { generateHostTimeline } = require('./generateHostTimeline');
 
-const callServer = require('./callServer');
-const { filterLogs, filterLogsByDate } = require('./filterLogs');
-const getServiceLogsCommand = require('./getServiceLogsCommand');
-const getServiceStatesCommand = require('./getServiceStatesCommand');
+const getServiceLogsCommand = require('./checkmkHelper/getServiceLogsCommand');
+const getServiceStatesCommand = require('./checkmkHelper/getServiceStatesCommand');
+const callServer = require('./checkmkHelper/callServer');
+const { filterLogs, filterLogsByDate } = require('./checkmkHelper/filterLogs');
 
-const generateTimelineOutsideLogs = require('./generateTimelineOutsideLogs');
-const generateTimelineFromStates = require('./generateTimelineFromStates');
-const finalizeAvailability = require('./finalizeAvailability');
+const generateTimelineOutsideLogs = require('./checkmkHelper/generateTimelineOutsideLogs');
+const generateTimelineFromStates = require('./checkmkHelper/generateTimelineFromStates');
+const finalizeAvailability = require('./checkmkHelper/finalizeAvailability');
 
 const {
   displayFormat,
@@ -19,7 +19,7 @@ const {
   serviceFlappingType,
   stateTypeStarted,
   stateTypeStopped,
-} = require('./setting');
+} = require('./checkmkHelper/setting');
 
 const addHostDown = (
   timeline,
@@ -237,91 +237,103 @@ const generateTimeline = (
   return timeline;
 };
 
-const generateServiceAvailability = async (
+const generateServiceTimeline = async (
+  server,
+  port,
   hostName,
   serviceName,
-  rangeFrom,
-  rangeUntil
+  from,
+  until
 ) => {
-  // host data
-  const hostData = await generateHostAvailabilityFromAlerts(
-    hostName,
-    rangeFrom,
-    rangeUntil,
-    ['HOST ALERT']
-  );
+  try {
+    const rangeFrom = moment(from);
+    const rangeUntil = moment(until);
 
-  // get logs
-  let command = getServiceLogsCommand(hostName, serviceName);
-  let serviceLogs = await callServer(command);
-  serviceLogs = filterLogs(serviceLogs, rangeFrom, rangeUntil);
-
-  // get state
-  command = getServiceStatesCommand(hostName, serviceName);
-  let stateLogs = await callServer(command);
-  stateLogs = filterLogsByDate(stateLogs, rangeFrom, rangeUntil);
-
-  // init result
-  let availabilty = {};
-  const timelines = {};
-  for (const state of serviceStateTypes) {
-    availabilty[state] = 0;
-    timelines[state] = [];
-  }
-  const rangeDuration = rangeFrom.diff(rangeUntil);
-
-  let timeline = generateTimeline(
-    rangeDuration,
-    rangeUntil,
-    serviceLogs,
-    stateLogs,
-    availabilty,
-    timelines
-  );
-
-  // add timeline from rangeFrom
-  const lastTimeline = timeline[timeline.length - 1];
-  if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
-    generateTimelineOutsideLogs(
-      serviceStateTypes,
-      stateLogs,
-      lastTimeline,
-      rangeFrom,
-      rangeDuration,
-      availabilty,
-      timelines,
-      timeline
+    // host data
+    const hostData = await generateHostTimeline(
+      server,
+      port,
+      hostName,
+      from,
+      until,
+      ['HOST ALERT']
     );
-  }
 
-  // generate timeline with no logs
-  if (timeline.length === 0 && stateLogs.length > 1) {
-    generateTimelineFromStates(
-      serviceStateTypes,
-      stateLogs,
-      rangeFrom,
+    // get logs
+    let command = getServiceLogsCommand(hostName, serviceName);
+    let serviceLogs = await callServer(command, server, port);
+    serviceLogs = filterLogs(serviceLogs, rangeFrom, rangeUntil);
+
+    // get state
+    command = getServiceStatesCommand(hostName, serviceName);
+    let stateLogs = await callServer(command, server, port);
+    stateLogs = filterLogsByDate(stateLogs, rangeFrom, rangeUntil);
+
+    // init result
+    let availabilty = {};
+    const timelines = {};
+    for (const state of serviceStateTypes) {
+      availabilty[state] = 0;
+      timelines[state] = [];
+    }
+    const rangeDuration = rangeFrom.diff(rangeUntil);
+
+    let timeline = generateTimeline(
+      rangeDuration,
       rangeUntil,
-      rangeDuration,
+      serviceLogs,
+      stateLogs,
       availabilty,
-      timelines,
-      timeline
+      timelines
     );
-  }
 
-  const hostDownTimes = hostData.timelines.DOWN;
-  if (timeline.length > 1 && hostDownTimes.length > 0) {
-    timeline = addHostDown(
-      timeline,
-      timelines,
-      availabilty,
-      hostDownTimes,
-      rangeDuration
-    );
-  }
+    // add timeline from rangeFrom
+    const lastTimeline = timeline[timeline.length - 1];
+    if (lastTimeline && lastTimeline.from > rangeFrom.format(displayFormat)) {
+      generateTimelineOutsideLogs(
+        serviceStateTypes,
+        stateLogs,
+        lastTimeline,
+        rangeFrom,
+        rangeDuration,
+        availabilty,
+        timelines,
+        timeline
+      );
+    }
 
-  timelines['summary'] = timeline;
-  availabilty = finalizeAvailability(availabilty);
-  return { availabilty, timelines };
+    // generate timeline with no logs
+    if (timeline.length === 0 && stateLogs.length > 1) {
+      generateTimelineFromStates(
+        serviceStateTypes,
+        stateLogs,
+        rangeFrom,
+        rangeUntil,
+        rangeDuration,
+        availabilty,
+        timelines,
+        timeline
+      );
+    }
+
+    const hostDownTimes = hostData.timelines.DOWN;
+    if (timeline.length > 1 && hostDownTimes.length > 0) {
+      timeline = addHostDown(
+        timeline,
+        timelines,
+        availabilty,
+        hostDownTimes,
+        rangeDuration
+      );
+    }
+
+    timelines['summary'] = timeline;
+    availabilty = finalizeAvailability(availabilty);
+    return { availabilty, timelines };
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 };
 
-module.exports = generateServiceAvailability;
+module.exports = { generateServiceTimeline };

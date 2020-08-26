@@ -1,11 +1,6 @@
 const net = require('net');
 
-require('dotenv').config();
-
-const host = process.env.HOST;
-const port = process.env.PORT;
-
-const callServer = (command) => {
+const callServer = (command, host, port) => {
   return new Promise((resolve, reject) => {
     let result = [];
     const client = new net.Socket();
@@ -25,6 +20,7 @@ const callServer = (command) => {
       const resultParsed = JSON.parse(resultString);
       resolve(resultParsed);
     });
+
     client.on('error', reject);
   });
 };

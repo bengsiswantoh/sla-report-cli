@@ -4,10 +4,10 @@ const hostDowntimeType = 'HOST DOWNTIME ALERT';
 const serviceFlappingType = 'SERVICE FLAPPING ALERT';
 
 module.exports = {
-  hostName: 'RO-Busol',
-  serviceName: 'Check_MK',
-  from: '2020-07-01 00:00:00',
-  until: '2020-08-02 00:00:00',
+  hostName: 'Busol PadiNET',
+  serviceName: 'Busol PadiNET',
+  from: '2020-06-01 00:00:00',
+  until: '2020-07-02 00:00:00',
 
   displayFormat: 'YYYY-MM-DD HH:mm:ss',
   dateFormat: 'YYYY-MM-DD',

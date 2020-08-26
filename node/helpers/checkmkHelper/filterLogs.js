@@ -3,7 +3,7 @@ const moment = require('moment');
 const { dateFormat } = require('./setting');
 
 const filterLogs = (logs, rangeFrom, rangeUntil) => {
-  filteredLogs = logs.filter((item) => {
+  let filteredLogs = logs.filter((item) => {
     const from = item[0];
     return from >= rangeFrom.unix() && from <= rangeUntil.unix();
   });
@@ -12,7 +12,7 @@ const filterLogs = (logs, rangeFrom, rangeUntil) => {
 };
 
 const filterLogsByDate = (logs, rangeFrom, rangeUntil) => {
-  filteredLogs = logs.filter((item) => {
+  let filteredLogs = logs.filter((item) => {
     const from = moment.unix(item[0]);
     return (
       from.format(dateFormat) >= rangeFrom.format(dateFormat) &&

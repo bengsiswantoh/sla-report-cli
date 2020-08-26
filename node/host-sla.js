@@ -1,23 +1,29 @@
-const moment = require('moment');
+require('dotenv').config();
 
-// const generateHostAvailabilityFromNotifications = require('./helpers/generateHostAvailabilityFromNotifications');
-const generateHostAvailabilityFromAlerts = require('./helpers/generateHostAvailabilityFromAlerts');
+const server = process.env.SERVER;
+const port = process.env.PORT;
 
-const { hostName, from, until, displayFormat } = require('./helpers/setting');
+const { generateHostTimeline } = require('./helpers/generateHostTimeline');
 
-const hostAvailability = async (hostName, from, until) => {
-  from = moment(from);
-  until = moment(until);
+const {
+  hostName,
+  from,
+  until,
+  displayFormat,
+} = require('./helpers/checkmkHelper/setting');
 
+const hostAvailability = async () => {
   try {
-    const data = await generateHostAvailabilityFromAlerts(
+    const data = await generateHostTimeline(
+      server,
+      port,
       hostName,
       from,
       until
     );
 
-    console.log('timeline', data.timelines.summary);
-    console.log('timeline', data.timelines.summary.length);
+    // console.log('timeline', data.timelines.summary);
+    // console.log('timeline', data.timelines.summary.length);
     console.log('availability', data.availabilty);
 
     console.log('host', hostName);
@@ -28,4 +34,4 @@ const hostAvailability = async (hostName, from, until) => {
   }
 };
 
-hostAvailability(hostName, from, until);
+hostAvailability();

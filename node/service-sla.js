@@ -1,6 +1,11 @@
-const moment = require('moment');
+require('dotenv').config();
 
-const generateServiceAvailability = require('./helpers/generateServiceAvailability');
+const server = process.env.SERVER;
+const port = process.env.PORT;
+
+const {
+  generateServiceTimeline,
+} = require('./helpers/generateServiceTimeline');
 
 const {
   hostName,
@@ -8,14 +13,13 @@ const {
   from,
   until,
   displayFormat,
-} = require('./helpers/setting');
+} = require('./helpers/checkmkHelper/setting');
 
-const serviceAvailability = async (hostName, serviceName, from, until) => {
-  from = moment(from);
-  until = moment(until);
-
+const serviceAvailability = async () => {
   try {
-    const serviceData = await generateServiceAvailability(
+    const serviceData = await generateServiceTimeline(
+      server,
+      port,
       hostName,
       serviceName,
       from,
@@ -24,7 +28,7 @@ const serviceAvailability = async (hostName, serviceName, from, until) => {
 
     // console.log('hostDataDown', hostData.timelines.DOWN);
     // console.log('timeline', serviceData.timelines['H.Down']);
-    console.log('timeline', serviceData.timelines.summary);
+    // console.log('timeline', serviceData.timelines.summary);
     console.log('availability', serviceData.availabilty);
 
     console.log('host', hostName);
@@ -36,4 +40,4 @@ const serviceAvailability = async (hostName, serviceName, from, until) => {
   }
 };
 
-serviceAvailability(hostName, serviceName, from, until);
+serviceAvailability();
