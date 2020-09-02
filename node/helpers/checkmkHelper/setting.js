@@ -5,9 +5,9 @@ const serviceFlappingType = 'SERVICE FLAPPING ALERT';
 
 module.exports = {
   hostName: 'Busol PadiNET',
-  serviceName: 'Busol PadiNET',
-  from: '2020-06-01 00:00:00',
-  until: '2020-07-02 00:00:00',
+  serviceName: 'Access Point',
+  from: '2020-08-01 00:00:00',
+  until: '2020-09-01 23:59:59',
 
   displayFormat: 'YYYY-MM-DD HH:mm:ss',
   dateFormat: 'YYYY-MM-DD',

@@ -1,3 +1,19 @@
+const getHostsCommand = () => {
+  let command = 'GET hosts\n';
+  command = command + 'Columns: name\n';
+  command = command + 'OutputFormat: json\n';
+
+  return command;
+};
+
+const getServicesCommand = () => {
+  let command = 'GET services\n';
+  command = command + 'Columns: host_name description \n';
+  command = command + 'OutputFormat: json\n';
+
+  return command;
+};
+
 const getHostLogsCommand = (hostName) => {
   let command = 'GET log\n';
   command = command + 'Columns: time type state_type plugin_output\n';
@@ -43,6 +59,8 @@ const getServiceStatesCommand = (hostName, serviceName) => {
 };
 
 module.exports = {
+  getHostsCommand,
+  getServicesCommand,
   getHostLogsCommand,
   getHostStatesCommand,
   getServiceLogsCommand,

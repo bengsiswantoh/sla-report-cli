@@ -10,10 +10,9 @@ const {
   serviceName,
   from,
   until,
-  displayFormat,
 } = require('./helpers/checkmkHelper/setting');
 
-const serviceAvailability = async () => {
+const main = async () => {
   try {
     const serviceData = await generateServiceTimeline(
       server,
@@ -24,7 +23,7 @@ const serviceAvailability = async () => {
       until
     );
 
-    // console.log('hostDataDown', hostData.timelines.DOWN);
+    console.log('hostDataDown', serviceData.timelines.UNKNOWN);
     // console.log('timeline', serviceData.timelines['H.Down']);
     // console.log('timeline', serviceData.timelines.summary);
     console.log('availability', serviceData.availabilty);
@@ -38,4 +37,4 @@ const serviceAvailability = async () => {
   }
 };
 
-serviceAvailability();
+main();

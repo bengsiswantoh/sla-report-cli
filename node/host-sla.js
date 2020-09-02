@@ -5,14 +5,9 @@ const port = process.env.PORT;
 
 const generateHostTimeline = require('./helpers/generateHostTimeline');
 
-const {
-  hostName,
-  from,
-  until,
-  displayFormat,
-} = require('./helpers/checkmkHelper/setting');
+const { hostName, from, until } = require('./helpers/checkmkHelper/setting');
 
-const hostAvailability = async () => {
+const main = async () => {
   try {
     const data = await generateHostTimeline(
       server,
@@ -34,4 +29,4 @@ const hostAvailability = async () => {
   }
 };
 
-hostAvailability();
+main();

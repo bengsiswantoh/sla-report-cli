@@ -1,7 +1,7 @@
 const net = require('net');
 require('dotenv').config();
 
-const host = process.env.HOST;
+const server = process.env.SERVER;
 const port = process.env.PORT;
 
 const callServer = (command) => {
@@ -9,7 +9,7 @@ const callServer = (command) => {
     let result = [];
     const client = new net.Socket();
 
-    client.connect(port, host, () => {
+    client.connect(port, server, () => {
       client.write(command);
       client.end();
     });
@@ -30,9 +30,17 @@ const callServer = (command) => {
 };
 
 const main = async () => {
-  let command = 'GET columns\n';
-  command = command + 'Columns: name\n';
-  command = command + 'Filter: table = log\n';
+  // let command = 'GET columns\n';
+  // command = command + 'Columns: name\n';
+  // command = command + 'Filter: table = servicegroups\n';
+  // command = command + 'OutputFormat: json\n';
+
+  // let command = 'GET hostgroups\n';
+  // command = command + 'Columns: name members\n';
+  // command = command + 'OutputFormat: json\n';
+
+  let command = 'GET servicegroups\n';
+  command = command + 'Columns: name members\n';
   command = command + 'OutputFormat: json\n';
 
   try {

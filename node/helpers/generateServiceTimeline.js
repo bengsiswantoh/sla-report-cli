@@ -108,8 +108,20 @@ const addHostDown = (
 
 const addResult = (result, availabilty, timelines, timeline) => {
   availabilty[result.state] += result.durationFloat;
-  timelines[result.state].push(result);
-  timeline.push(result);
+  const prevTimeline = timeline[timeline.length - 1];
+  const stateTimeline = timelines[result.state];
+
+  if (timeline.length > 0 && prevTimeline.state === result.state) {
+    prevTimeline.fromMoment = result.fromMoment;
+    prevTimeline.from = result.from;
+    prevTimeline.durationFloat += result.durationFloat;
+    prevTimeline.duration = `${prevTimeline.durationFloat.toFixed(2)}%`;
+
+    stateTimeline[stateTimeline.length - 1] = prevTimeline;
+  } else {
+    stateTimeline.push(result);
+    timeline.push(result);
+  }
 };
 
 const getState = (pluginOutput) => {
